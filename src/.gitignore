@@ -1,0 +1,57 @@
+# Build
+bin/
+obj/
+
+# Rider
+.idea/
+
+# VS Code
+.vscode/
+
+# Visual Studio
+.vs/
+
+# User files
+*.user
+*.suo
+
+# Logs
+logs/
+*.log
+
+# Secrets
+.env
+.env.*
+appsettings.Development.json
+
+# EF
+Migrations/*Designer.cs
+
+# Docker
+docker-data/
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# Test Results
+TestResults/
+
+# Coverage
+coverage/
+coverage.xml
+
+# Publish
+publish/
+
+# NuGet
+*.nupkg
+
+# Seq
+seq-data/
+
+# Redis
+redis-data/
+
+# PostgreSQL
+postgres-data/
