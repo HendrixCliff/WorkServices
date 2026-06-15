@@ -1,0 +1,11 @@
+C:\Users\HP\WorkServices\src\WorkServices.Domain\obj\Debug\net9.0\WorkServices.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\HP\WorkServices\src\WorkServices.Domain\obj\Debug\net9.0\WorkServices.Domain.AssemblyInfoInputs.cache
+C:\Users\HP\WorkServices\src\WorkServices.Domain\obj\Debug\net9.0\WorkServices.Domain.AssemblyInfo.cs
+C:\Users\HP\WorkServices\src\WorkServices.Domain\obj\Debug\net9.0\WorkServices.Domain.csproj.CoreCompileInputs.cache
+C:\Users\HP\WorkServices\src\WorkServices.Domain\bin\Debug\net9.0\WorkServices.Domain.deps.json
+C:\Users\HP\WorkServices\src\WorkServices.Domain\bin\Debug\net9.0\WorkServices.Domain.dll
+C:\Users\HP\WorkServices\src\WorkServices.Domain\bin\Debug\net9.0\WorkServices.Domain.pdb
+C:\Users\HP\WorkServices\src\WorkServices.Domain\obj\Debug\net9.0\WorkServices.Domain.dll
+C:\Users\HP\WorkServices\src\WorkServices.Domain\obj\Debug\net9.0\refint\WorkServices.Domain.dll
+C:\Users\HP\WorkServices\src\WorkServices.Domain\obj\Debug\net9.0\WorkServices.Domain.pdb
+C:\Users\HP\WorkServices\src\WorkServices.Domain\obj\Debug\net9.0\ref\WorkServices.Domain.dll

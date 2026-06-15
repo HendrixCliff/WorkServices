@@ -1,0 +1,56 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v9.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v9.0": {
+      "WorkServices.Infrastructure/1.0.0": {
+        "dependencies": {
+          "WorkServices.Application": "1.0.0",
+          "WorkServices.Domain": "1.0.0"
+        },
+        "runtime": {
+          "WorkServices.Infrastructure.dll": {}
+        }
+      },
+      "WorkServices.Application/1.0.0": {
+        "dependencies": {
+          "WorkServices.Domain": "1.0.0"
+        },
+        "runtime": {
+          "WorkServices.Application.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "WorkServices.Domain/1.0.0": {
+        "runtime": {
+          "WorkServices.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "WorkServices.Infrastructure/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "WorkServices.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "WorkServices.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
