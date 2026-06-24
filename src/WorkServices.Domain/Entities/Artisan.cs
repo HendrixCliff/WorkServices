@@ -15,17 +15,20 @@ public class Artisan : User
     public decimal AverageRating { get; private set; }
 
     public int TotalReviews { get; private set; }
-
-    public Artisan(
-        string fullName,
-        string email,
-        string phoneNumber,
-        ServiceType serviceType)
-        : base(
-            fullName,
-            email,
-            phoneNumber,
-            UserRole.Artisan)
+    
+      public ICollection<JobAssignment> JobAssignments = new List<JobAssignment>();
+   public Artisan(
+    string fullName,
+    string email,
+    string phoneNumber,
+    string passwordHash,
+    ServiceType serviceType)
+    : base(
+        fullName,
+        email,
+        phoneNumber,
+        passwordHash,
+        UserRole.Artisan)
     {
         ServiceType = serviceType;
         IsAvailable = true;

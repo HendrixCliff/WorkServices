@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.SignalR;
 using WorkServices.API.Hubs;
 using WorkServices.Application.Interfaces;
 
-namespace WorkServices.Infrastructure.Notifications;
+namespace WorkServices.API.Notifications;
 
 public class SignalRNotifier : IRealtimeNotifier
 {

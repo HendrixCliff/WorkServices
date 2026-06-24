@@ -20,6 +20,8 @@ public class JobAssignment : Entity
 
     public Artisan? Artisan { get; private set; }
 
+   
+    
     public JobAssignment(
         Guid serviceRequestId,
         Guid artisanId)

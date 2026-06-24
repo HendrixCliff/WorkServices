@@ -1,3 +1,5 @@
+using WorkServices.Domain.Entities;
+
 namespace WorkServices.Application.Interfaces.Repositories;
 
 public interface IArtisanRepository

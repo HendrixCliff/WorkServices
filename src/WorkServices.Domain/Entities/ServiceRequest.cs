@@ -20,7 +20,8 @@ public class ServiceRequest : Entity
     public RequestStatus Status { get; private set; }
 
     public Customer? Customer { get; private set; }
-
+   
+    public ICollection<JobAssignment> JobAssignments = new List<JobAssignment>();
     public ServiceRequest(
         Guid customerId,
         ServiceType serviceType,

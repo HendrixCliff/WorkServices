@@ -11,6 +11,8 @@ public abstract class User : Entity
 
     public string PhoneNumber { get; protected set; } = string.Empty;
 
+    public string PasswordHash { get; private set; } = string.Empty;
+   
     public UserRole Role { get; protected set; }
 
     protected User()
@@ -18,14 +20,16 @@ public abstract class User : Entity
     }
 
     protected User(
-        string fullName,
-        string email,
-        string phoneNumber,
-        UserRole role)
-    {
-        FullName = fullName;
-        Email = email;
-        PhoneNumber = phoneNumber;
-        Role = role;
-    }
+    string fullName,
+    string email,
+    string phoneNumber,
+    string passwordHash,
+    UserRole role)
+{
+    FullName = fullName;
+    Email = email;
+    PhoneNumber = phoneNumber;
+    PasswordHash = passwordHash;
+    Role = role;
+}
 }
