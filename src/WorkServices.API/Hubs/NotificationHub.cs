@@ -1,49 +1,39 @@
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using System.Security.Claims;
 
 namespace WorkServices.API.Hubs;
 
-[Authorize]
 public class NotificationHub : Hub
 {
     public override async Task OnConnectedAsync()
     {
         var userId =
-            Context.User?
-                .FindFirst(ClaimTypes.NameIdentifier)?
-                .Value;
+            Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         var role =
-            Context.User?
-                .FindFirst(ClaimTypes.Role)?
-                .Value;
+            Context.User?.FindFirst(ClaimTypes.Role)?.Value;
 
         if (!string.IsNullOrWhiteSpace(userId))
         {
-            await Groups.AddToGroupAsync(
-                Context.ConnectionId,
-                $"user-{userId}");
-
-            if (role == "Artisan")
+            switch (role)
             {
-                await Groups.AddToGroupAsync(
-                    Context.ConnectionId,
-                    $"artisan-{userId}");
-            }
+                case "Artisan":
+                    await Groups.AddToGroupAsync(
+                        Context.ConnectionId,
+                        $"artisan-{userId}");
+                    break;
 
-            if (role == "Customer")
-            {
-                await Groups.AddToGroupAsync(
-                    Context.ConnectionId,
-                    $"customer-{userId}");
-            }
+                case "Customer":
+                    await Groups.AddToGroupAsync(
+                        Context.ConnectionId,
+                        $"customer-{userId}");
+                    break;
 
-            if (role == "Admin")
-            {
-                await Groups.AddToGroupAsync(
-                    Context.ConnectionId,
-                    "admins");
+                case "Admin":
+                    await Groups.AddToGroupAsync(
+                        Context.ConnectionId,
+                        "admins");
+                    break;
             }
         }
 

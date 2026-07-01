@@ -5,11 +5,21 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Serilog;
+using Microsoft.Extensions.DependencyInjection;
+using WorkServices.Application.Interfaces.Repositories;
 using WorkServices.Infrastructure.Configurations;
 using WorkServices.Application.Interfaces.Services;
 using WorkServices.Infrastructure.Authentication;
 using WorkServices.Application.Interfaces;
+using WorkServices.Application;
+using WorkServices.API.Hubs;
+using WorkServices.API.Middleware;
 using WorkServices.Infrastructure.UnitOfWork;
+using WorkServices.Infrastructure.DomainEvents;
+using WorkServices.Infrastructure.Services;
+using WorkServices.Infrastructure.Persistence.Repositories;
+using Microsoft.OpenApi.Models;
+using WorkServices.API.Services;
 
 Env.Load();
 
@@ -143,22 +153,137 @@ builder.Host.UseSerilog((context, config) =>
             ?? "http://localhost:5341");
 });
 //_logger.LogInformation(...)
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IServiceRequestRepository, ServiceRequestRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<IJobAssignmentRepository, JobAssignmentRepository>();
+builder.Services.AddScoped< IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<INotificationRepository,NotificationRepository>();
+builder.Services.AddScoped< IArtisanRepository, ArtisanRepository>();
+builder.Services.AddScoped<IQuoteRepository, QuoteRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IRealtimeNotifier, RealtimeNotifier>();
+builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
-builder.Services.AddOpenApi();
+builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddHealthChecks().AddDbContextCheck<ApplicationDbContext>();
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter(
+        "api",
+        opt =>
+        {
+            opt.Window = TimeSpan.FromMinutes(1);
+            opt.PermitLimit = 60;
+        });
+});
+
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(AssemblyMarker).Assembly);
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(
+        "CustomerOnly",
+        p => p.RequireRole("Customer"));
+
+    options.AddPolicy(
+        "ArtisanOnly",
+        p => p.RequireRole("Artisan"));
+
+    options.AddPolicy(
+        "AdminOnly",
+        p => p.RequireRole("Admin"));
+});
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc(
+        "v1",
+        new OpenApiInfo
+        {
+            Title = "Work Services API",
+            Version = "v1",
+            Description =
+                "Work Services Platform API"
+        });
+
+    options.AddSecurityDefinition(
+        "Bearer",
+        new OpenApiSecurityScheme
+        {
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            Scheme = "Bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description =
+                "Enter JWT like: Bearer {token}"
+        });
+
+    options.AddSecurityRequirement(
+        new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference =
+                        new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                },
+                Array.Empty<string>()
+            }
+        });
+});
+
+builder.Services.AddSignalR();
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
-
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint(
+            "/swagger/v1/swagger.json",
+            "Work Services API v1");
+
+        options.RoutePrefix = string.Empty;
+    });
 }
 
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseSerilogRequestLogging();
+
 app.UseHttpsRedirection();
+
+app.UseMiddleware<ExceptionMiddleware>();
+
+app.UseRateLimiter();
+
+app.UseAuthentication();
+
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.MapHealthChecks("/health");
+
+app.MapHub<NotificationHub>("/hubs/notifications");
+
 app.Run();
 

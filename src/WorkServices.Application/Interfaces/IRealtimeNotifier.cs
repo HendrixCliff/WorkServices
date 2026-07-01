@@ -4,12 +4,12 @@ public interface IRealtimeNotifier
 {
     Task NotifyArtisanAsync(
         Guid artisanId,
-        object payload);
-
-    Task NotifyAdminAsync(
-        string message);
+        object message);
 
     Task NotifyCustomerAsync(
         Guid customerId,
-        object payload);
+        object message);
+
+    Task NotifyAdminAsync(
+        object message);
 }

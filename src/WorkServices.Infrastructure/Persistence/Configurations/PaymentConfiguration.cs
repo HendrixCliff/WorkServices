@@ -15,6 +15,9 @@ public sealed class PaymentConfiguration
         builder.Property(x => x.Amount)
             .HasColumnType("numeric(18,2)");
 
+            builder.Property(x => x.Type) 
+              .IsRequired();
+
         builder.HasOne<ServiceRequest>()
             .WithMany()
             .HasForeignKey(x => x.ServiceRequestId)

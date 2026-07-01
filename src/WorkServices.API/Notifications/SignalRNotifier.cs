@@ -4,7 +4,7 @@ using WorkServices.Application.Interfaces;
 
 namespace WorkServices.API.Notifications;
 
-public class SignalRNotifier : IRealtimeNotifier
+public sealed class SignalRNotifier : IRealtimeNotifier
 {
     private readonly IHubContext<NotificationHub> _hub;
 
@@ -14,29 +14,29 @@ public class SignalRNotifier : IRealtimeNotifier
         _hub = hub;
     }
 
-    public async Task NotifyArtisanAsync(
+    public Task NotifyArtisanAsync(
         Guid artisanId,
         object payload)
     {
-        await _hub.Clients
+        return _hub.Clients
             .Group($"artisan-{artisanId}")
             .SendAsync("JobAssigned", payload);
     }
 
-    public async Task NotifyCustomerAsync(
+    public Task NotifyCustomerAsync(
         Guid customerId,
         object payload)
     {
-        await _hub.Clients
+        return _hub.Clients
             .Group($"customer-{customerId}")
             .SendAsync("Notification", payload);
     }
 
-    public async Task NotifyAdminAsync(
-        string message)
+    public Task NotifyAdminAsync(
+        object payload)
     {
-        await _hub.Clients
+        return _hub.Clients
             .Group("admins")
-            .SendAsync("Notification", message);
+            .SendAsync("Notification", payload);
     }
 }

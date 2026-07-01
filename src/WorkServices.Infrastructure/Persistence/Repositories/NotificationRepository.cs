@@ -31,4 +31,14 @@ public class NotificationRepository
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
     }
+
+
+    public async Task<List<Notification>> GetByUserIdAsync(
+        Guid userId)
+    {
+        return await _db.Notifications
+            .Where(x => x.UserId == userId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync();
+    }
 }

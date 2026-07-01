@@ -7,4 +7,6 @@ public interface INotificationRepository
     Task AddAsync(Notification notification);
 
     Task<List<Notification>> GetUserNotificationsAsync(Guid userId);
+
+    Task<List<Notification>> GetByUserIdAsync(Guid userId);
 }

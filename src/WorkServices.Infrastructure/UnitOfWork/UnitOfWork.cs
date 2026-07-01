@@ -3,21 +3,29 @@ using WorkServices.Infrastructure.Persistence;
 
 namespace WorkServices.Infrastructure.UnitOfWork;
 
-public sealed class UnitOfWork
-    : IUnitOfWork
+public sealed class UnitOfWork : IUnitOfWork
 {
-    private readonly ApplicationDbContext _context;
+    private readonly ApplicationDbContext _db;
+    private readonly IDomainEventDispatcher _dispatcher;
 
     public UnitOfWork(
-        ApplicationDbContext context)
+        ApplicationDbContext db,
+        IDomainEventDispatcher dispatcher)
     {
-        _context = context;
+        _db = db;
+        _dispatcher = dispatcher;
     }
 
     public async Task<int> SaveChangesAsync(
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
-        return await _context.SaveChangesAsync(
+        var result =
+            await _db.SaveChangesAsync(cancellationToken);
+
+        await _dispatcher.DispatchAsync(
+            _db,
             cancellationToken);
+
+        return result;
     }
 }

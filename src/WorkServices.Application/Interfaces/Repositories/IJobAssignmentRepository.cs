@@ -10,4 +10,6 @@ public interface IJobAssignmentRepository
     Task<JobAssignment?> GetByIdAsync(Guid id);
 
     void Update(JobAssignment assignment);
+
+    Task<List<JobAssignment>>GetArtisanAssignmentsAsync( Guid artisanId);
 }

@@ -15,16 +15,24 @@ public class ServiceRequestRepository
         _db = db;
     }
 
-    public async Task<ServiceRequest?> GetByIdAsync(
-        Guid id)
-    {
-        return await _db.ServiceRequests
-            .FirstOrDefaultAsync(x => x.Id == id);
-    }
-
     public async Task AddAsync(
         ServiceRequest request)
     {
         await _db.ServiceRequests.AddAsync(request);
     }
+   
+    public async Task<List<ServiceRequest>>GetCustomerRequestsAsync(Guid customerId)
+        {
+            return await _db.ServiceRequests
+                .Where(x => x.CustomerId == customerId)
+                .OrderByDescending(x => x.CreatedAt)
+                .ToListAsync();
+        }
+        public async Task<ServiceRequest?>GetByIdAsync(Guid id)
+        {
+            return await _db.ServiceRequests
+                .Include(x => x.Customer)
+                .FirstOrDefaultAsync(
+                    x => x.Id == id);
+        }
 }
