@@ -23,7 +23,6 @@ public sealed class UnitOfWork : IUnitOfWork
             await _db.SaveChangesAsync(cancellationToken);
 
         await _dispatcher.DispatchAsync(
-            _db,
             cancellationToken);
 
         return result;

@@ -1,7 +1,7 @@
 using MediatR;
-using WorkServices.Application.Interfaces.Repositories;
-using WorkServices.Application.DTOs.Notification;
 using WorkServices.Application.Common.Pagination;
+using WorkServices.Application.DTOs.Notification;
+using WorkServices.Application.Interfaces.Repositories;
 
 namespace WorkServices.Application.Features.Notification.Queries.GetNotifications;
 
@@ -18,15 +18,21 @@ public sealed class GetNotificationsQueryHandler
         _repository = repository;
     }
 
-    public async Task<List<NotificationDto>> Handle(
+    public async Task<PagedResult<NotificationDto>> Handle(
         GetNotificationsQuery request,
         CancellationToken cancellationToken)
     {
         var notifications =
-            await _repository.GetByUserIdAsync(
-                request.UserId);
+            await _repository.GetByUserIdAsync(request.UserId);
 
-        var result = notifications
+        var ordered = notifications
+            .OrderByDescending(x => x.CreatedAt);
+
+        var total = ordered.Count();
+
+        var items = ordered
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
             .Select(x => new NotificationDto
             {
                 Id = x.Id,
@@ -35,10 +41,15 @@ public sealed class GetNotificationsQueryHandler
                 Message = x.Message,
                 IsRead = x.IsRead,
                 CreatedAt = x.CreatedAt
-            });
+            })
+            .ToList();
 
-        return result.ToPagedResult(
-            request.Page,
-            request.PageSize);
+        return new PagedResult<NotificationDto>
+        {
+            Items = items,
+            Page = request.Page,
+            PageSize = request.PageSize,
+            TotalCount = total
+        };
     }
 }

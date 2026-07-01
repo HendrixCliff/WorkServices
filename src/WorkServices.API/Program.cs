@@ -20,6 +20,7 @@ using WorkServices.Infrastructure.Services;
 using WorkServices.Infrastructure.Persistence.Repositories;
 using Microsoft.OpenApi.Models;
 using WorkServices.API.Services;
+using System.Threading.RateLimiting;
 
 Env.Load();
 
@@ -176,13 +177,17 @@ builder.Services.AddHealthChecks().AddDbContextCheck<ApplicationDbContext>();
 
 builder.Services.AddRateLimiter(options =>
 {
-    options.AddFixedWindowLimiter(
-        "api",
-        opt =>
-        {
-            opt.Window = TimeSpan.FromMinutes(1);
-            opt.PermitLimit = 60;
-        });
+    options.GlobalLimiter =
+        PartitionedRateLimiter.Create<HttpContext, string>(context =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "global",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 100,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 10
+                }));
 });
 
 builder.Services.AddMediatR(cfg =>
