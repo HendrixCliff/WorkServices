@@ -24,53 +24,32 @@ using System.Threading.RateLimiting;
 
 Env.Load();
 
+
 var builder = WebApplication.CreateBuilder(args);
+Console.WriteLine(typeof(Program).Assembly.FullName);
 
+builder.Configuration.AddEnvironmentVariables();
 
-var dbHost =
-    Environment.GetEnvironmentVariable("DB_HOST");
-
-var dbPort =
-    Environment.GetEnvironmentVariable("DB_PORT");
-
-var dbName =
-    Environment.GetEnvironmentVariable("DB_DATABASE");
-
-var dbUser =
-    Environment.GetEnvironmentVariable("DB_USERNAME")
-   ;
-
-var dbPassword =
-    Environment.GetEnvironmentVariable("DB_PASSWORD");
+builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
+{
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
 
     var connectionString =
-    $"Host={dbHost};" +
-    $"Port={dbPort};" +
-    $"Database={dbName};" +
-    $"Username={dbUser};" +
-    $"Password={dbPassword};";
+        $"Host={configuration["DB_HOST"]};" +
+        $"Port={configuration["DB_PORT"]};" +
+        $"Database={configuration["DB_DATABASE"]};" +
+        $"Username={configuration["DB_USERNAME"]};" +
+        $"Password={configuration["DB_PASSWORD"]};";
 
-    builder.Services.AddDbContext<ApplicationDbContext>(options =>
-{
-     options.UseNpgsql(
-        connectionString,
-        x =>
+    Console.WriteLine($"Using DB = {connectionString}");
+
+    options.UseNpgsql(connectionString,
+        npgsql =>
         {
-            x.MigrationsAssembly(
-                "WorkServices.Infrastructure");
+            npgsql.MigrationsAssembly("WorkServices.Infrastructure");
         });
 });
-
-var jwtKey =
-    Environment.GetEnvironmentVariable("JWT_KEY");
-
-var jwtIssuer =
-    Environment.GetEnvironmentVariable("JWT_ISSUER");
-
-var jwtAudience =
-    Environment.GetEnvironmentVariable("JWT_AUDIENCE");
-
-   builder.Services
+builder.Services
     .AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme =
@@ -81,6 +60,23 @@ var jwtAudience =
     })
     .AddJwtBearer(options =>
     {
+        var configuration = builder.Configuration;
+
+        var jwtKey = configuration["JWT_KEY"];
+        var jwtIssuer = configuration["JWT_ISSUER"];
+        var jwtAudience = configuration["JWT_AUDIENCE"];
+
+        Console.WriteLine($"Inside AddJwtBearer");
+        Console.WriteLine($"JWT_KEY = {jwtKey}");
+        Console.WriteLine($"JWT_ISSUER = {jwtIssuer}");
+        Console.WriteLine($"JWT_AUDIENCE = {jwtAudience}");
+
+        if (string.IsNullOrWhiteSpace(jwtKey))
+        {
+            throw new InvalidOperationException(
+                "JWT_KEY is missing from configuration.");
+        }
+
         options.TokenValidationParameters =
             new TokenValidationParameters
             {
@@ -94,7 +90,7 @@ var jwtAudience =
 
                 IssuerSigningKey =
                     new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(jwtKey!))
+                        Encoding.UTF8.GetBytes(jwtKey))
             };
 
         options.Events =
@@ -108,8 +104,8 @@ var jwtAudience =
                     var path =
                         context.HttpContext.Request.Path;
 
-                    if (!string.IsNullOrEmpty(accessToken)
-                        && path.StartsWithSegments("/hubs/notifications"))
+                    if (!string.IsNullOrEmpty(accessToken) &&
+                        path.StartsWithSegments("/hubs/notifications"))
                     {
                         context.Token = accessToken;
                     }
@@ -118,40 +114,56 @@ var jwtAudience =
                 }
             };
     });
+Console.WriteLine("Program started");
+Console.WriteLine(builder.Environment.EnvironmentName);
+
+foreach (var pair in builder.Configuration.AsEnumerable())
+{
+    if (pair.Key.Contains("JWT"))
+        Console.WriteLine($"{pair.Key} = {pair.Value}");
+}
+Console.WriteLine("JWT_KEY before GetBytes = " +
+    builder.Configuration["JWT_KEY"]);
+
+Console.WriteLine("Issuer = " +
+    builder.Configuration["JWT_ISSUER"]);
+
+Console.WriteLine("Audience = " +
+    builder.Configuration["JWT_AUDIENCE"]);
+ 
 
 builder.Services.Configure<SmtpSettings>(options =>
 {
-    options.Host =
-        Environment.GetEnvironmentVariable("SMTP_HOST")!;
+   options.Host =
+    builder.Configuration["SMTP_HOST"]!;
 
-    options.Port =
-        int.Parse(
-            Environment.GetEnvironmentVariable("SMTP_PORT")!);
+options.Port =
+    int.Parse(builder.Configuration["SMTP_PORT"]!);
 
-    options.Username =
-        Environment.GetEnvironmentVariable("SMTP_USERNAME")!;
+options.Username =
+    builder.Configuration["SMTP_USERNAME"]!;
 
-    options.Password =
-        Environment.GetEnvironmentVariable("SMTP_PASSWORD")!;
+options.Password =
+    builder.Configuration["SMTP_PASSWORD"]!;
 
-    options.From =
-        Environment.GetEnvironmentVariable("SMTP_FROM")!;
+options.From =
+    builder.Configuration["SMTP_FROM"]!;
 });
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration =
-        Environment.GetEnvironmentVariable("REDIS_CONNECTION")
-        ?? "localhost:6379";
+    builder.Configuration["REDIS_CONNECTION"]
+    ?? "localhost:6379";
 });
 
 builder.Host.UseSerilog((context, config) =>
 {
     config
         .WriteTo.Console()
-        .WriteTo.Seq(
-            Environment.GetEnvironmentVariable("SEQ_URL")
-            ?? "http://localhost:5341");
+       .WriteTo.Seq(
+    builder.Configuration["SEQ_URL"]
+    ?? "http://localhost:5341");
 });
 //_logger.LogInformation(...)
 builder.Services.AddScoped<IServiceRequestRepository, ServiceRequestRepository>();
@@ -291,4 +303,8 @@ app.MapHealthChecks("/health");
 app.MapHub<NotificationHub>("/hubs/notifications");
 
 app.Run();
+
+public partial class Program
+{
+}
 

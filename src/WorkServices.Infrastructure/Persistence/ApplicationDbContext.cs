@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WorkServices.Domain.Entities;
+using WorkServices.Domain.Abstractions;
 
 namespace WorkServices.Infrastructure.Persistence;
 
@@ -30,10 +31,12 @@ public sealed class ApplicationDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.ApplyConfigurationsFromAssembly(
-            typeof(ApplicationDbContext).Assembly);
+{
+    modelBuilder.Ignore<DomainEvent>();
 
-        base.OnModelCreating(modelBuilder);
-    }
+    modelBuilder.ApplyConfigurationsFromAssembly(
+        typeof(ApplicationDbContext).Assembly);
+
+    base.OnModelCreating(modelBuilder);
+}
 }
