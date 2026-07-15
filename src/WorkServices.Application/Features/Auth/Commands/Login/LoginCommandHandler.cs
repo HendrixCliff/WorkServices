@@ -2,6 +2,7 @@ using MediatR;
 using WorkServices.Application.Interfaces.Repositories;
 using WorkServices.Application.Interfaces.Services;
 using WorkServices.Domain.Entities;
+using WorkServices.Application.Common.Exceptions;
 
 namespace WorkServices.Application.Features.Auth.Commands.Login;
 
@@ -39,14 +40,14 @@ public class LoginCommandHandler
                 request.Email);
 
         if (user is null)
-            throw new Exception(
+            throw new NotFoundException(
                 "Invalid credentials");
 
         if (!_hasher.Verify(
             request.Password,
             user.PasswordHash))
         {
-            throw new Exception(
+            throw new NotFoundException(
                 "Invalid credentials");
         }
 

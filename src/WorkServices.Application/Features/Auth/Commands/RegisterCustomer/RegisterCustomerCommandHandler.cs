@@ -2,6 +2,7 @@ using MediatR;
 using WorkServices.Application.Interfaces.Repositories;
 using WorkServices.Application.Interfaces.Services;
 using WorkServices.Domain.Entities;
+using WorkServices.Application.Common.Exceptions;
 
 namespace WorkServices.Application.Features.Auth.Commands.RegisterCustomer;
 
@@ -31,7 +32,7 @@ public class RegisterCustomerCommandHandler
                 request.Email);
 
         if (exists != null)
-            throw new Exception(
+            throw new NotFoundException(
                 "Email already exists");
 
         var customer =

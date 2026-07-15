@@ -4,12 +4,13 @@ WORKDIR /src
 
 COPY . .
 
-RUN dotnet restore
+RUN dotnet restore src/WorkServices.API/WorkServices.API.csproj
 
 RUN dotnet publish \
     src/WorkServices.API/WorkServices.API.csproj \
     -c Release \
-    -o /app/publish
+    -o /app/publish \
+    --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 

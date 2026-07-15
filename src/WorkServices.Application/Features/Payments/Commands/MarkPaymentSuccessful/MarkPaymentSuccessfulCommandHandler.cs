@@ -2,6 +2,7 @@ using MediatR;
 using WorkServices.Application.Interfaces;
 using WorkServices.Application.Interfaces.Repositories;
 using WorkServices.Domain.Enums;
+using WorkServices.Application.Common.Exceptions;
 
 namespace WorkServices.Application.Features.Payments.Commands.MarkPaymentSuccessful;
 
@@ -30,12 +31,12 @@ public sealed class MarkPaymentSuccessfulCommandHandler
     {
         var payment =
             await _payments.GetByIdAsync(request.PaymentId)
-            ?? throw new Exception("Payment not found");
+            ?? throw new NotFoundException("Payment not found");
 
         var serviceRequest =
             await _serviceRequests.GetByIdAsync(
                 payment.ServiceRequestId)
-            ?? throw new Exception("Service request not found");
+            ?? throw new NotFoundException("Service request not found");
 
         switch (payment.Type)
         {

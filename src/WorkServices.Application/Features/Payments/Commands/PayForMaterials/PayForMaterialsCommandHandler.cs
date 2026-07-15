@@ -1,6 +1,7 @@
 using MediatR;
 using WorkServices.Application.Interfaces;
 using WorkServices.Application.Interfaces.Repositories;
+using WorkServices.Application.Common.Exceptions;
 
 namespace WorkServices.Application.Features.Payments.Commands.PayForMaterials;
 
@@ -24,7 +25,7 @@ public sealed class PayForMaterialsCommandHandler
     {
         var payment =
             await _payments.GetByIdAsync(request.PaymentId)
-            ?? throw new Exception("Payment not found.");
+            ?? throw new NotFoundException("Payment not found.");
 
         payment.ConfirmMaterialPayment(request.Reference);
 

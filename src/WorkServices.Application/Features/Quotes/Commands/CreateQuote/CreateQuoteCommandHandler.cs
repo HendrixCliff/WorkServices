@@ -2,6 +2,7 @@ using MediatR;
 using WorkServices.Application.Interfaces;
 using WorkServices.Application.Interfaces.Repositories;
 using WorkServices.Domain.Entities;
+using WorkServices.Application.Common.Exceptions;
 
 namespace WorkServices.Application.Features.Quotes.Commands.CreateQuote;
 
@@ -31,7 +32,7 @@ public sealed class CreateQuoteCommandHandler
             request.ServiceRequestId);
 
     if (serviceRequest is null)
-        throw new Exception(
+        throw new NotFoundException(
             "Service request not found");
 
     var quote =

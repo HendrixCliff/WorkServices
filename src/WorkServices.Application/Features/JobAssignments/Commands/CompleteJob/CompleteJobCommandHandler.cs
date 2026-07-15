@@ -3,6 +3,7 @@ using WorkServices.Application.Interfaces;
 using WorkServices.Application.Interfaces.Repositories;
 using WorkServices.Domain.Entities;
 using WorkServices.Domain.Enums;
+using WorkServices.Application.Common.Exceptions;
 
 namespace WorkServices.Application.Features.JobAssignments.Commands.CompleteJob;
 
@@ -38,11 +39,11 @@ public sealed class CompleteJobCommandHandler
             request.ServiceRequestId);
 
     if (serviceRequest is null)
-        throw new Exception(
+       throw new NotFoundException(
             "Service request not found");
 
     if (serviceRequest.Status != JobStatus.InProgress)
-        throw new Exception(
+       throw new NotFoundException(
             "Job is not in progress.");
 
     var quote =
@@ -50,7 +51,7 @@ public sealed class CompleteJobCommandHandler
             request.ServiceRequestId);
 
     if (quote is null)
-        throw new Exception(
+       throw new NotFoundException(
             "Quote not found");
 
     serviceRequest.Complete(

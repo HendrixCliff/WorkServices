@@ -2,6 +2,7 @@ using MediatR;
 using WorkServices.Application.Common.Pagination;
 using WorkServices.Application.DTOs.Notification;
 using WorkServices.Application.Interfaces.Repositories;
+using WorkServices.Application.Common.Exceptions;
 
 namespace WorkServices.Application.Features.Notification.Queries.GetNotifications;
 

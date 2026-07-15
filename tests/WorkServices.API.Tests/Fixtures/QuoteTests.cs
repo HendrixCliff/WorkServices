@@ -1,15 +1,18 @@
 using System.Net;
 
-namespace WorkServices.API.Tests;
+namespace WorkServices.API.Tests.Fixtures;
 
+[Collection("postgres")]
 public class QuoteTests
-    : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
 
     public QuoteTests(
-        CustomWebApplicationFactory factory)
+        PostgreSqlFixture fixture)
     {
+        var factory =
+            new CustomWebApplicationFactory(fixture);
+
         _client = factory.CreateClient();
     }
 

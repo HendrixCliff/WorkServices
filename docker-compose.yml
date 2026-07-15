@@ -1,11 +1,8 @@
-version: '3.9'
-
 services:
-
   api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: src/WorkServices.API/Dockerfile
 
     ports:
       - "8080:8080"
@@ -13,6 +10,7 @@ services:
     depends_on:
       - postgres
       - redis
+     
 
   postgres:
     image: postgres:17
@@ -35,7 +33,38 @@ services:
     image: datalust/seq
 
     environment:
-      ACCEPT_EULA: Y
+      ACCEPT_EULA: "Y"
 
     ports:
       - "5341:80"
+
+  prometheus:
+    image: prom/prometheus
+
+    container_name: prometheus
+
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+    ports:
+      - "9090:9090"
+
+    depends_on:
+      - api
+
+  grafana:
+    image: grafana/grafana
+
+    container_name: grafana
+
+    ports:
+      - "3000:3000"
+
+    depends_on:
+      - prometheus
+
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
+volumes:
+  grafana-storage:

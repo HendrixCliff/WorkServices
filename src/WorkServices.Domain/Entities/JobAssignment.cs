@@ -1,6 +1,7 @@
 using WorkServices.Domain.Abstractions;
 using WorkServices.Domain.Events;
 using WorkServices.Domain.Enums;
+using WorkServices.Domain.Exceptions;
 
 namespace WorkServices.Domain.Entities;
 
@@ -35,7 +36,7 @@ public class JobAssignment : Entity
     public void Accept()
     {
         if (Status != AssignmentStatus.Pending)
-            throw new InvalidOperationException(
+            throw new DomainException(
                 "Only pending assignments can be accepted.");
 
         Status = AssignmentStatus.Accepted;
@@ -52,7 +53,7 @@ public class JobAssignment : Entity
     public void Reject()
     {
         if (Status != AssignmentStatus.Pending)
-            throw new InvalidOperationException(
+            throw new DomainException(
                 "Only pending assignments can be rejected.");
 
         Status = AssignmentStatus.Rejected;

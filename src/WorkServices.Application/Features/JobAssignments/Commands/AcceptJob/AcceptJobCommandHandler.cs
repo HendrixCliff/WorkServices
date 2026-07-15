@@ -1,6 +1,7 @@
 using MediatR;
 using WorkServices.Application.Interfaces.Repositories;
 using WorkServices.Application.Interfaces;
+using WorkServices.Application.Common.Exceptions;
 
 namespace WorkServices.Application.Features.JobAssignments.Commands.AcceptJob;
 
@@ -28,7 +29,7 @@ public sealed class AcceptJobCommandHandler
                 request.AssignmentId);
 
         if (assignment is null)
-            throw new Exception("Assignment not found");
+            throw new NotFoundException("Assignment not found");
 
         assignment.Accept();
 

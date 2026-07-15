@@ -4,15 +4,21 @@ using WorkServices.API.Tests;
 using FluentAssertions;
 using Xunit;
 
+namespace WorkServices.API.Tests.Fixtures;
+
+[Collection("postgres")]
 public class AuthenticationTests
-    : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
 
-    public AuthenticationTests(CustomWebApplicationFactory factory)
-    {
-        _client = factory.CreateClient();
-    }
+    public AuthenticationTests(
+    PostgreSqlFixture fixture)
+{
+    var factory =
+        new CustomWebApplicationFactory(fixture);
+
+    _client = factory.CreateClient();
+}
 
  [Fact]
 public async Task Login_ReturnsSuccess()

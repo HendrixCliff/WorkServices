@@ -1,6 +1,7 @@
 using WorkServices.Domain.Abstractions;
 using WorkServices.Domain.Enums;
 using WorkServices.Domain.Events;
+using WorkServices.Domain.Exceptions;
 
 namespace WorkServices.Domain.Entities;
 
@@ -48,7 +49,7 @@ public class ServiceRequest : Entity
 public void Assign(Guid artisanId)
 {
     if (Status != JobStatus.Pending)
-        throw new InvalidOperationException(
+        throw new DomainException(
             "Only pending requests can be assigned.");
 
     Status = JobStatus.Assigned;
@@ -73,7 +74,7 @@ public void Assign(Guid artisanId)
    public void SubmitQuote()
     {
         if (Status != JobStatus.Assigned)
-            throw new InvalidOperationException(
+            throw new DomainException(
                 "Only assigned jobs can receive quotes.");
 
         Status = JobStatus.QuoteSubmitted;
@@ -88,7 +89,7 @@ public void Assign(Guid artisanId)
     public void ApproveQuote()
     {
         if (Status != JobStatus.QuoteSubmitted)
-            throw new InvalidOperationException(
+            throw new DomainException(
                 "Quote must be submitted first.");
 
         Status = JobStatus.QuoteApproved;
@@ -102,7 +103,7 @@ public void Assign(Guid artisanId)
     public void MarkMaterialsPaid()
     {
         if (Status != JobStatus.QuoteApproved)
-            throw new InvalidOperationException(
+            throw new DomainException(
                 "Quote must be approved first.");
 
         Status = JobStatus.MaterialsPaid;
@@ -114,7 +115,7 @@ public void Assign(Guid artisanId)
     public void Start()
     {
         if (Status != JobStatus.MaterialsPaid)
-            throw new InvalidOperationException(
+            throw new DomainException(
                 "Materials must be paid before work starts.");
 
         Status = JobStatus.InProgress;
@@ -128,7 +129,7 @@ public void Assign(Guid artisanId)
     public void Complete(Guid artisanId)
     {
         if (Status != JobStatus.InProgress)
-            throw new InvalidOperationException(
+            throw new DomainException(
                 "Only an active job can be completed.");
 
         Status = JobStatus.Completed;
@@ -146,7 +147,7 @@ public void Assign(Guid artisanId)
     public void MarkLabourPaid()
     {
         if (Status != JobStatus.Completed)
-            throw new InvalidOperationException(
+            throw new DomainException(
                 "Job must be completed before labour payment.");
 
         Status = JobStatus.LabourPaid;
@@ -158,7 +159,7 @@ public void Assign(Guid artisanId)
     public void MarkReviewed()
     {
         if (Status != JobStatus.LabourPaid)
-            throw new InvalidOperationException(
+            throw new DomainException(
                 "Labour payment must be completed before review.");
 
         Status = JobStatus.Reviewed;

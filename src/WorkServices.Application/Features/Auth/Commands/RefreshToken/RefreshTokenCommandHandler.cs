@@ -2,6 +2,7 @@ using MediatR;
 using WorkServices.Application.Interfaces.Repositories;
 using WorkServices.Application.Interfaces.Services;
 using WorkServices.Domain.Entities;
+using WorkServices.Application.Common.Exceptions;
 
 namespace WorkServices.Application.Features.Auth.Commands.RefreshToken;
 
@@ -35,17 +36,17 @@ public class RefreshTokenCommandHandler
                 request.RefreshToken);
 
         if (refreshToken is null)
-            throw new Exception(
+            throw new NotFoundException(
                 "Invalid refresh token");
 
         if (refreshToken.IsRevoked)
-            throw new Exception(
+            throw new NotFoundException(
                 "Refresh token revoked");
 
         if (refreshToken.ExpiresAt <
             DateTime.UtcNow)
         {
-            throw new Exception(
+            throw new NotFoundException(
                 "Refresh token expired");
         }
 
@@ -54,7 +55,7 @@ public class RefreshTokenCommandHandler
                 refreshToken.UserId);
 
         if (user is null)
-            throw new Exception(
+            throw new NotFoundException(
                 "User not found");
 
         var role = user switch

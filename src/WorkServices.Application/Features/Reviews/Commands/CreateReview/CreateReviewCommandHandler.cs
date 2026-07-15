@@ -3,6 +3,7 @@ using WorkServices.Application.Interfaces;
 using WorkServices.Application.Interfaces.Repositories;
 using WorkServices.Domain.Entities;
 using WorkServices.Domain.Enums;
+using WorkServices.Application.Common.Exceptions;
 
 namespace WorkServices.Application.Features.Reviews.Commands.CreateReview;
 
@@ -38,11 +39,11 @@ public sealed class CreateReviewCommandHandler
             request.ServiceRequestId);
 
     if (serviceRequest is null)
-        throw new Exception(
+        throw new NotFoundException(
             "Service request not found");
 
     if (serviceRequest.Status != JobStatus.LabourPaid)
-        throw new Exception(
+       throw new NotFoundException(
             "Cannot review until payment is complete.");
 
     var artisan =
@@ -50,7 +51,7 @@ public sealed class CreateReviewCommandHandler
             request.ArtisanId);
 
     if (artisan is null)
-        throw new Exception(
+        throw new NotFoundException(
             "Artisan not found");
 
     var review =

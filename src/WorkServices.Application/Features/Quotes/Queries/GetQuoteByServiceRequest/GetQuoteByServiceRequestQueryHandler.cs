@@ -1,6 +1,7 @@
 using MediatR;
 using WorkServices.Application.Interfaces.Repositories;
 using WorkServices.Application.DTOs.Quotes;
+using WorkServices.Application.Common.Exceptions;
 
 namespace WorkServices.Application.Features.Quotes.Queries.GetQuoteByServiceRequest;
 
@@ -26,7 +27,7 @@ public sealed class GetQuoteByServiceRequestQueryHandler
                 request.ServiceRequestId);
 
         if (quote is null)
-            throw new Exception("Quote not found.");
+            throw new NotFoundException("Quote not found.");
 
         return new QuoteDto
         {

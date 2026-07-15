@@ -3,6 +3,7 @@ using WorkServices.Application.Interfaces;
 using WorkServices.Application.Interfaces.Repositories;
 using WorkServices.Domain.Entities;
 using WorkServices.Domain.Enums;
+using WorkServices.Application.Common.Exceptions;
 
 namespace WorkServices.Application.Features.Quotes.Commands.ApproveQuote;
 
@@ -35,14 +36,14 @@ public sealed class ApproveQuoteCommandHandler
 {
     var quote =
         await _quotes.GetByIdAsync(request.QuoteId)
-        ?? throw new Exception("Quote not found");
+        ?? throw new NotFoundException("Quote not found");
 
     quote.Approve();
 
    var requestEntity =
     await _serviceRequests.GetByIdAsync(
         quote.ServiceRequestId)
-    ?? throw new Exception("Service request not found");
+    ?? throw new NotFoundException("Service request not found");
 
     requestEntity!.ApproveQuote();
 

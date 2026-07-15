@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Serilog;
+using Prometheus;
 using Microsoft.Extensions.DependencyInjection;
 using WorkServices.Application.Interfaces.Repositories;
 using WorkServices.Infrastructure.Configurations;
@@ -21,6 +22,8 @@ using WorkServices.Infrastructure.Persistence.Repositories;
 using Microsoft.OpenApi.Models;
 using WorkServices.API.Services;
 using System.Threading.RateLimiting;
+using WorkServices.Application.Common.Exceptions;
+using WorkServices.Infrastructure.AI;
 
 Env.Load();
 
@@ -73,7 +76,7 @@ builder.Services
 
         if (string.IsNullOrWhiteSpace(jwtKey))
         {
-            throw new InvalidOperationException(
+            throw new NotFoundException(
                 "JWT_KEY is missing from configuration.");
         }
 
@@ -165,7 +168,7 @@ builder.Host.UseSerilog((context, config) =>
     builder.Configuration["SEQ_URL"]
     ?? "http://localhost:5341");
 });
-//_logger.LogInformation(...)
+
 builder.Services.AddScoped<IServiceRequestRepository, ServiceRequestRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
@@ -178,6 +181,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddHttpClient<IAiService, GeminiService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IRealtimeNotifier, RealtimeNotifier>();
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -296,11 +300,15 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
+app.MapHub<NotificationHub>("/hubs/notifications");
+
 app.MapControllers();
 
-app.MapHealthChecks("/health");
+app.UseHttpMetrics();
 
-app.MapHub<NotificationHub>("/hubs/notifications");
+app.MapMetrics();
+
+app.MapHealthChecks("/health");
 
 app.Run();
 

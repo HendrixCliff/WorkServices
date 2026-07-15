@@ -2,6 +2,7 @@ using MediatR;
 using WorkServices.Application.Interfaces;
 using WorkServices.Application.Interfaces.Repositories;
 using WorkServices.Domain.Entities;
+using WorkServices.Application.Common.Exceptions;
 
 namespace WorkServices.Application.Features.JobAssignments.Commands.AssignJob;
 
@@ -35,12 +36,12 @@ public sealed class AssignJobCommandHandler
         var serviceRequest =
             await _serviceRequestRepository.GetByIdAsync(
                 request.ServiceRequestId)
-            ?? throw new Exception("Service request not found");
+            ?? throw new NotFoundException("Service request not found");
 
         var artisan =
             await _artisanRepository.GetByIdAsync(
                 request.ArtisanId)
-            ?? throw new Exception("Artisan not found");
+            ?? throw new NotFoundException("Artisan not found");
 
         var assignment =
             new JobAssignment(

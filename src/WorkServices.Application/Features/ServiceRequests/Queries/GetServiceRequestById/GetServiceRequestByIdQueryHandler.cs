@@ -2,6 +2,7 @@ using MediatR;
 using WorkServices.Application.Interfaces.Repositories;
 using WorkServices.Application.DTOs.ServiceRequests;
 using System.Linq;
+using WorkServices.Application.Common.Exceptions;
 
 namespace WorkServices.Application.Features.ServiceRequests.Queries.GetServiceRequestById;
 
@@ -25,7 +26,7 @@ public sealed class GetServiceRequestByIdQueryHandler
         var sr = await _repository.GetByIdAsync(request.ServiceRequestId);
 
     if (sr is null)
-        throw new Exception("Service request not found");
+        throw new NotFoundException("Service request not found");
         
        var assignment = sr.JobAssignments.FirstOrDefault();
 
