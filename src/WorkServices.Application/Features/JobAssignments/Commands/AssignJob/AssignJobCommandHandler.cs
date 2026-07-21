@@ -7,7 +7,7 @@ using WorkServices.Application.Common.Exceptions;
 namespace WorkServices.Application.Features.JobAssignments.Commands.AssignJob;
 
 public sealed class AssignJobCommandHandler
-    : IRequestHandler<AssignJobCommand, Guid>
+    : IRequestHandler<AssignJobCommand, Unit>
 {
     private readonly IServiceRequestRepository _serviceRequestRepository;
 
@@ -29,33 +29,35 @@ public sealed class AssignJobCommandHandler
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Guid> Handle(
-        AssignJobCommand request,
-        CancellationToken cancellationToken)
-    {
-        var serviceRequest =
-            await _serviceRequestRepository.GetByIdAsync(
-                request.ServiceRequestId)
-            ?? throw new NotFoundException("Service request not found");
+    public async Task<Unit> Handle(
+    AssignJobCommand request,
+    CancellationToken cancellationToken)
+{
+    var serviceRequest =
+        await _serviceRequestRepository.GetByIdAsync(
+            request.ServiceRequestId)
+        ?? throw new NotFoundException(
+            "Service request not found");
 
-        var artisan =
-            await _artisanRepository.GetByIdAsync(
-                request.ArtisanId)
-            ?? throw new NotFoundException("Artisan not found");
+    var artisan =
+        await _artisanRepository.GetByIdAsync(
+            request.ArtisanId)
+        ?? throw new NotFoundException(
+            "Artisan not found");
 
-        var assignment =
-            new JobAssignment(
-                serviceRequest.Id,
-                artisan.Id);
+    var assignment =
+        new JobAssignment(
+            serviceRequest.Id,
+            artisan.Id);
 
-       serviceRequest.Assign(artisan.Id);
+    serviceRequest.Assign(artisan.Id);
 
-        await _assignmentRepository.AddAsync(
-            assignment);
+    await _assignmentRepository.AddAsync(
+        assignment);
 
-        await _unitOfWork.SaveChangesAsync(
-            cancellationToken);
+    await _unitOfWork.SaveChangesAsync(
+        cancellationToken);
 
-        return assignment.Id;
-    }
+    return Unit.Value;
+}
 }

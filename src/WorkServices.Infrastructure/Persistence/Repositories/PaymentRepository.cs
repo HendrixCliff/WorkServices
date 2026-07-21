@@ -30,6 +30,8 @@ public sealed class PaymentRepository
                 x => x.Id == id);
     }
 
+
+
     public async Task<List<Payment>>
         GetByRequestIdAsync(
             Guid requestId)
@@ -56,5 +58,13 @@ public sealed class PaymentRepository
             .OrderBy(x => x.CreatedAt)
             .ToListAsync();
     }
+
+    public async Task<Payment?> GetByReferenceAsync(
+    string reference)
+{
+    return await _db.Payments
+        .Include(x => x.ServiceRequest)
+        .FirstOrDefaultAsync(x => x.Reference == reference);
+}
 
 }

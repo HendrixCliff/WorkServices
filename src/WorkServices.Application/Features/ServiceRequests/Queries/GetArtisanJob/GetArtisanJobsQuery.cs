@@ -1,4 +1,4 @@
-using WorkServices.Application.DTOs.ArtisanJob;
+using WorkServices.Application.DTOs.Artisans;
 using MediatR;
 
 namespace WorkServices.Application.Features.ServiceRequests.Queries.GetArtisanJob;

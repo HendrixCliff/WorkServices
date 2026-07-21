@@ -12,6 +12,8 @@ public interface IPaymentRepository
         Guid requestId);
 
     void Update(Payment payment);
+
+    Task<Payment?> GetByReferenceAsync(string reference);
     
     Task<List<Payment>> GetByServiceRequestIdAsync(Guid serviceRequestId);
 }

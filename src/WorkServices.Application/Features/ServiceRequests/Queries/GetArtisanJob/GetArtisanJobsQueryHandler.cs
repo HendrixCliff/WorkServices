@@ -1,4 +1,4 @@
-using WorkServices.Application.DTOs.ArtisanJob;
+using WorkServices.Application.DTOs.Artisans;
 using WorkServices.Application.Interfaces.Repositories;
 using WorkServices.Domain.Enums;
 using MediatR;

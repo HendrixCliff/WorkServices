@@ -30,7 +30,7 @@ public sealed class ApproveQuoteCommandHandler
         _serviceRequests = serviceRequests;
     }
 
-    public async Task Handle(
+   public async Task Handle(
     ApproveQuoteCommand request,
     CancellationToken cancellationToken)
 {
@@ -40,22 +40,35 @@ public sealed class ApproveQuoteCommandHandler
 
     quote.Approve();
 
-   var requestEntity =
-    await _serviceRequests.GetByIdAsync(
-        quote.ServiceRequestId)
-    ?? throw new NotFoundException("Service request not found");
+    var serviceRequest =
+        await _serviceRequests.GetByIdAsync(
+            quote.ServiceRequestId)
+        ?? throw new NotFoundException("Service request not found");
 
-    requestEntity!.ApproveQuote();
+    serviceRequest.ApproveQuote();
 
-    var payment =
-        new Payment(
-            quote.ServiceRequestId,
-            quote.MaterialCost,
-            PaymentType.Material);
+    if (quote.MaterialCost > 0)
+    {
+        var materialPayment =
+            new Payment(
+                quote.ServiceRequestId,
+                quote.MaterialCost,
+                PaymentType.Material);
 
-    await _payments.AddAsync(payment);
+        await _payments.AddAsync(materialPayment);
+    }
 
-    await _unitOfWork.SaveChangesAsync(
-        cancellationToken);
+    if (quote.LabourCost > 0)
+    {
+        var labourPayment =
+            new Payment(
+                quote.ServiceRequestId,
+                quote.LabourCost,
+                PaymentType.Labour);
+
+        await _payments.AddAsync(labourPayment);
+    }
+
+    await _unitOfWork.SaveChangesAsync(cancellationToken);
 }
 }

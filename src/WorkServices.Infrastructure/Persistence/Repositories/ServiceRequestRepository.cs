@@ -21,18 +21,38 @@ public class ServiceRequestRepository
         await _db.ServiceRequests.AddAsync(request);
     }
    
-    public async Task<List<ServiceRequest>>GetCustomerRequestsAsync(Guid customerId)
-        {
-            return await _db.ServiceRequests
-                .Where(x => x.CustomerId == customerId)
-                .OrderByDescending(x => x.CreatedAt)
-                .ToListAsync();
-        }
         public async Task<ServiceRequest?>GetByIdAsync(Guid id)
         {
             return await _db.ServiceRequests
                 .Include(x => x.Customer)
                 .FirstOrDefaultAsync(
                     x => x.Id == id);
+        }
+
+        public async Task<List<ServiceRequest>> GetRequestsForAssignmentAsync()
+        {
+            return await _db.ServiceRequests
+                .Include(x => x.Customer)
+                .OrderBy(x => x.Status)
+                .ThenBy(x => x.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<List<ServiceRequest>> GetCustomerRequestsAsync(
+        Guid customerId)
+        {
+            return await _db.ServiceRequests
+                .Where(x => x.CustomerId == customerId)
+                .OrderByDescending(x => x.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<ServiceRequest?> GetDetailsAsync(Guid id)
+        {
+            return await _db.ServiceRequests
+                .Include(x => x.Customer)
+                .Include(x => x.JobAssignments)
+                    .ThenInclude(x => x.Artisan)
+                .FirstOrDefaultAsync(x => x.Id == id);
         }
 }

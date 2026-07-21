@@ -9,7 +9,7 @@ public class Payment : Entity
     private Payment()
     {
     }
-
+    
     public Guid ServiceRequestId { get; private set; }
 
     public decimal Amount { get; private set; }
@@ -20,6 +20,8 @@ public class Payment : Entity
 
     public PaymentStatus Status { get; private set; }
 
+    public ServiceRequest ServiceRequest { get; private set; } = null!;
+    
     public Payment(
         Guid serviceRequestId,
         decimal amount,
@@ -81,6 +83,11 @@ public class Payment : Entity
                 Id));
 
         MarkUpdated();
+    }
+
+    public void SetReference(string reference)
+    {
+        Reference = reference;
     }
 
     public void MarkFailed()

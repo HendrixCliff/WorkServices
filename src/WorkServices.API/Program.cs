@@ -4,11 +4,12 @@ using WorkServices.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using StackExchange.Redis;
 using Serilog;
 using Prometheus;
+using WorkServices.Infrastructure.Persistence.Configurations;
 using Microsoft.Extensions.DependencyInjection;
 using WorkServices.Application.Interfaces.Repositories;
-using WorkServices.Infrastructure.Configurations;
 using WorkServices.Application.Interfaces.Services;
 using WorkServices.Infrastructure.Authentication;
 using WorkServices.Application.Interfaces;
@@ -24,6 +25,7 @@ using WorkServices.API.Services;
 using System.Threading.RateLimiting;
 using WorkServices.Application.Common.Exceptions;
 using WorkServices.Infrastructure.AI;
+using WorkServices.Application.Common.Security;
 
 Env.Load();
 
@@ -44,7 +46,7 @@ builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =
         $"Username={configuration["DB_USERNAME"]};" +
         $"Password={configuration["DB_PASSWORD"]};";
 
-    Console.WriteLine($"Using DB = {connectionString}");
+    
 
     options.UseNpgsql(connectionString,
         npgsql =>
@@ -69,11 +71,7 @@ builder.Services
         var jwtIssuer = configuration["JWT_ISSUER"];
         var jwtAudience = configuration["JWT_AUDIENCE"];
 
-        Console.WriteLine($"Inside AddJwtBearer");
-        Console.WriteLine($"JWT_KEY = {jwtKey}");
-        Console.WriteLine($"JWT_ISSUER = {jwtIssuer}");
-        Console.WriteLine($"JWT_AUDIENCE = {jwtAudience}");
-
+       
         if (string.IsNullOrWhiteSpace(jwtKey))
         {
             throw new NotFoundException(
@@ -117,23 +115,13 @@ builder.Services
                 }
             };
     });
-Console.WriteLine("Program started");
-Console.WriteLine(builder.Environment.EnvironmentName);
 
-foreach (var pair in builder.Configuration.AsEnumerable())
-{
-    if (pair.Key.Contains("JWT"))
-        Console.WriteLine($"{pair.Key} = {pair.Value}");
-}
-Console.WriteLine("JWT_KEY before GetBytes = " +
-    builder.Configuration["JWT_KEY"]);
+// foreach (var pair in builder.Configuration.AsEnumerable())
+// {
+//     if (pair.Key.Contains("JWT"))
+//         Console.WriteLine($"{pair.Key} = {pair.Value}");
+// }
 
-Console.WriteLine("Issuer = " +
-    builder.Configuration["JWT_ISSUER"]);
-
-Console.WriteLine("Audience = " +
-    builder.Configuration["JWT_AUDIENCE"]);
- 
 
 builder.Services.Configure<SmtpSettings>(options =>
 {
@@ -153,11 +141,57 @@ options.From =
     builder.Configuration["SMTP_FROM"]!;
 });
 
+builder.Services.Configure<PaystackSettings>(options =>
+{
+    options.SecretKey =
+        builder.Configuration["PAYSTACK_SECRET_KEY"]!;
+
+    options.PublicKey =
+        builder.Configuration["PAYSTACK_PUBLIC_KEY"]!;
+
+    options.BaseUrl =
+        builder.Configuration["PAYSTACK_BASE_URL"]!;
+});
+
+Console.WriteLine("--------------------------------");
+Console.WriteLine(builder.Configuration["REDIS_CONNECTION"]);
+Console.WriteLine("--------------------------------");
+
+
+
+var redisConnection = builder.Configuration["REDIS_CONNECTION"] ?? "localhost:6379";
+
+Console.WriteLine($"Redis connection string: {redisConnection}");
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+{
+    var options = ConfigurationOptions.Parse(redisConnection);
+
+    options.AbortOnConnectFail = false;
+    options.ConnectRetry = 5;
+    options.ConnectTimeout = 5000;
+
+    Console.WriteLine("Connecting to Redis...");
+
+    var mux = ConnectionMultiplexer.Connect(options);
+
+    Console.WriteLine($"Redis Connected = {mux.IsConnected}");
+
+    foreach (var ep in mux.GetEndPoints())
+    {
+        var server = mux.GetServer(ep);
+
+        Console.WriteLine(
+            $"{ep} Connected={server.IsConnected} Type={server.ServerType}");
+    }
+
+    return mux;
+});
+
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration =
-    builder.Configuration["REDIS_CONNECTION"]
-    ?? "localhost:6379";
+        builder.Configuration["Redis:ConnectionString"];
 });
 
 builder.Host.UseSerilog((context, config) =>
@@ -185,9 +219,12 @@ builder.Services.AddHttpClient<IAiService, GeminiService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IRealtimeNotifier, RealtimeNotifier>();
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IEmailConfirmationService, EmailConfirmationService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+builder.Services.AddScoped<IPaystackService, PaystackService>();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHttpClient();
 
 builder.Services.AddHealthChecks().AddDbContextCheck<ApplicationDbContext>();
 
@@ -290,6 +327,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseSerilogRequestLogging();
 
+app.UseRouting();
+
 app.UseHttpsRedirection();
 
 app.UseMiddleware<ExceptionMiddleware>();
@@ -306,9 +345,12 @@ app.MapControllers();
 
 app.UseHttpMetrics();
 
+app.MapHealthChecks("/health");
+
 app.MapMetrics();
 
-app.MapHealthChecks("/health");
+await ApplicationDbSeeder.SeedAdminAsync(app.Services);
+
 
 app.Run();
 

@@ -18,9 +18,9 @@ public sealed class PaymentConfiguration
             builder.Property(x => x.Type) 
               .IsRequired();
 
-        builder.HasOne<ServiceRequest>()
-            .WithMany()
-            .HasForeignKey(x => x.ServiceRequestId)
-            .OnDelete(DeleteBehavior.Cascade);
+       builder.HasOne(x => x.ServiceRequest)
+    .WithMany()
+    .HasForeignKey(x => x.ServiceRequestId)
+    .OnDelete(DeleteBehavior.Cascade);
     }
 }

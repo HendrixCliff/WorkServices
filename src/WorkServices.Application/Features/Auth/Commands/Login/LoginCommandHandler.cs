@@ -38,10 +38,10 @@ public class LoginCommandHandler
         var user =
             await _users.GetByEmailAsync(
                 request.Email);
+        
 
-        if (user is null)
-            throw new NotFoundException(
-                "Invalid credentials");
+        if (user == null)
+    throw new UnauthorizedAccessException("Invalid credentials.");
 
         if (!_hasher.Verify(
             request.Password,
@@ -50,6 +50,12 @@ public class LoginCommandHandler
             throw new NotFoundException(
                 "Invalid credentials");
         }
+
+        if (!user.EmailConfirmed)
+    {
+        throw new UnauthorizedAccessException(
+            "Please confirm your email before logging in.");
+    }
 
         var role = user switch
         {
@@ -72,7 +78,8 @@ public class LoginCommandHandler
         user.Id,
         refreshToken,
         DateTime.UtcNow.AddDays(7)));
-
+ 
+ 
         return new LoginResponse
         {
             AccessToken = accessToken,

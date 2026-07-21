@@ -1,9 +1,12 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using WorkServices.Application.Features.ServiceRequests.Commands.CreateServiceRequest;
 using WorkServices.Application.Features.ServiceRequests.Queries.GetArtisanJob;
 using WorkServices.Application.Features.ServiceRequests.Queries.GetCustomerRequests;
+using WorkServices.Application.Features.ServiceRequests.Queries.GetMyRequests;
 using WorkServices.Application.Features.ServiceRequests.Queries.GetServiceRequestById;
+using Microsoft.AspNetCore.Authorization;
 
 [ApiController]
 [Route("api/service-requests")]
@@ -25,7 +28,7 @@ public class ServiceRequestsController
         var id =
             await _mediator.Send(command);
 
-        return Ok(id);
+        return Ok();
     }
 
     [HttpGet("customer/{customerId}")]
@@ -55,5 +58,21 @@ public class ServiceRequestsController
         return Ok(
             await _mediator.Send(
                 new GetServiceRequestByIdQuery(id)));
+    }
+
+    [Authorize(Roles = "Customer")]
+    [HttpGet("my")]
+    public async Task<IActionResult> GetMyRequests()
+    {
+        var customerId = Guid.Parse(
+            User.FindFirstValue(
+                ClaimTypes.NameIdentifier)!);
+
+        var requests =
+            await _mediator.Send(
+                new GetMyRequestsQuery(
+                    customerId));
+
+        return Ok(requests);
     }
 }

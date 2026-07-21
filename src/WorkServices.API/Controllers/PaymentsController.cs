@@ -1,45 +1,72 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using WorkServices.Application.Features.Payments.Commands.PayForLabour;
-using WorkServices.Application.Features.Payments.Commands.PayForMaterials;
+using WorkServices.Application.Features.Payments.Commands.InitializePayment;
+using WorkServices.Application.Features.Payments.Commands.MarkPaymentSuccessful;
 using WorkServices.Application.Features.Payments.Queries.GetPaymentsByServiceRequest;
+using WorkServices.Application.Interfaces.Services;
+using WorkServices.Application.Interfaces.Repositories;
 
 namespace WorkServices.API.Controllers;
 
 [ApiController]
 [Route("api/payments")]
-public sealed class PaymentsController
-    : ControllerBase
+public sealed class PaymentsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IPaystackService _paystack;
+    private readonly IPaymentRepository _payments;
 
     public PaymentsController(
-        IMediator mediator)
+        IMediator mediator,
+        IPaystackService paystack,
+        IPaymentRepository payments)
     {
         _mediator = mediator;
+        _paystack = paystack;
+        _payments = payments;
     }
 
-    [HttpPost("materials")]
-    public async Task<IActionResult> PayMaterials(
-        PayForMaterialsCommand command)
+    [HttpPost("{paymentId:guid}/initialize")]
+    public async Task<IActionResult> Initialize(Guid paymentId)
     {
-        await _mediator.Send(command);
+        var url = await _mediator.Send(
+            new InitializePaymentCommand(paymentId));
 
-        return NoContent();
+        return Ok(new
+        {
+            AuthorizationUrl = url
+        });
     }
 
-    [HttpPost("labour")]
-    public async Task<IActionResult> PayLabour(
-        PayForLabourCommand command)
+    [HttpGet("verify")]
+    public async Task<IActionResult> Verify(
+        [FromQuery] string reference)
     {
-        await _mediator.Send(command);
+        var payment =
+            await _payments.GetByReferenceAsync(reference);
 
-        return NoContent();
+        if (payment is null)
+            return NotFound();
+
+        var success =
+            await _paystack.VerifyPaymentAsync(reference);
+
+        if (!success)
+            return BadRequest("Payment not successful.");
+
+        await _mediator.Send(
+            new MarkPaymentSuccessfulCommand(
+                payment.Id,
+                reference));
+
+        return Ok(new
+        {
+            Message = "Payment successful."
+        });
     }
 
     [HttpGet("service-request/{serviceRequestId}")]
-    public async Task<IActionResult> Get(
-        Guid serviceRequestId)
+    public async Task<IActionResult> Get(Guid serviceRequestId)
     {
         return Ok(
             await _mediator.Send(

@@ -13,6 +13,8 @@ public sealed class ApplicationDbContext : DbContext
     }
   
     public DbSet<User> Users => Set<User>();
+
+    public DbSet<Admin> Admins => Set<Admin>();
       
     public DbSet<Customer> Customers => Set<Customer>();
 

@@ -25,6 +25,8 @@ public class ServiceRequest : Entity
 
     public decimal EstimatedCost { get; private set; }
     
+   public ICollection<Payment> Payments { get; private set; } = new List<Payment>();
+ 
     public ICollection<JobAssignment> JobAssignments
     {
         get;

@@ -7,4 +7,4 @@ public sealed record RegisterCustomerCommand(
     string Email,
     string PhoneNumber,
     string Password)
-    : IRequest<Guid>;
+    : IRequest<Unit>;

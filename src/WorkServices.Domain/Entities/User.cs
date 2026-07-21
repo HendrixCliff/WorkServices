@@ -13,8 +13,29 @@ public abstract class User : Entity
 
     public string PasswordHash { get; private set; } = string.Empty;
    
+    public string? EmailConfirmationTokenHash { get; private set; }
+
+    public DateTime? EmailConfirmationTokenExpiry { get; private set; }
+
+    public bool EmailConfirmed { get; private set; }
+
     public UserRole Role { get; protected set; }
 
+
+    public void SetEmailConfirmationToken(
+    string tokenHash,
+    DateTime expiry)
+    {
+        EmailConfirmationTokenHash = tokenHash;
+        EmailConfirmationTokenExpiry = expiry;
+    }
+
+    public void ConfirmEmail()
+    {
+        EmailConfirmed = true;
+        EmailConfirmationTokenHash = null;
+        EmailConfirmationTokenExpiry = null;
+    }
     protected User()
     {
     }

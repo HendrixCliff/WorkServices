@@ -1,4 +1,4 @@
-namespace WorkServices.Infrastructure.Configurations;
+namespace WorkServices.Infrastructure.Persistence.Configurations;
 
 public class SmtpSettings
 {

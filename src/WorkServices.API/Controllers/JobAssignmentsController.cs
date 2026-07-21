@@ -28,7 +28,7 @@ public sealed class JobAssignmentsController : ControllerBase
         var id =
             await _mediator.Send(command);
 
-        return Ok(id);
+        return Ok();
     }
 
     [HttpPost("{assignmentId:guid}/accept")]

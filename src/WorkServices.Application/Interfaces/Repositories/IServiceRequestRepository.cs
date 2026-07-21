@@ -7,6 +7,10 @@ public interface IServiceRequestRepository
     Task<ServiceRequest?> GetByIdAsync(Guid id);
 
     Task AddAsync(ServiceRequest request);
-
-    Task<List<ServiceRequest>>GetCustomerRequestsAsync(Guid customerId);
+  
+     Task<List<ServiceRequest>> GetRequestsForAssignmentAsync();
+     
+    Task<List<ServiceRequest>> GetCustomerRequestsAsync(Guid customerId);
+     
+    Task<ServiceRequest?> GetDetailsAsync(Guid id);
 }

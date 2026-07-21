@@ -1,8 +1,9 @@
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
 using Microsoft.Extensions.Options;
-using System.Net;
-using System.Net.Mail;
 using WorkServices.Application.Interfaces;
-using WorkServices.Infrastructure.Configurations;
+using WorkServices.Infrastructure.Persistence.Configurations;
 
 namespace WorkServices.Infrastructure.Services;
 
@@ -10,8 +11,7 @@ public class EmailService : IEmailService
 {
     private readonly SmtpSettings _settings;
 
-    public EmailService(
-        IOptions<SmtpSettings> options)
+    public EmailService(IOptions<SmtpSettings> options)
     {
         _settings = options.Value;
     }
@@ -22,29 +22,30 @@ public class EmailService : IEmailService
         string body,
         bool isHtml = true)
     {
-        using var smtp = new SmtpClient
-        {
-            Host = _settings.Host,
-            Port = _settings.Port,
-            EnableSsl = true,
-            Credentials = new NetworkCredential(
-                _settings.Username,
-                _settings.Password)
-        };
+        var message = new MimeMessage();
 
-        var mail = new MailMessage
-        {
-            From = new MailAddress(
-                _settings.From,
-                "Work Services"),
+        message.From.Add(new MailboxAddress("Work Services", _settings.From));
+        message.To.Add(MailboxAddress.Parse(to));
 
-            Subject = subject,
-            Body = body,
-            IsBodyHtml = isHtml
-        };
+        message.Subject = subject;
 
-        mail.To.Add(to);
+        message.Body = isHtml
+            ? new BodyBuilder { HtmlBody = body }.ToMessageBody()
+            : new TextPart("plain") { Text = body };
 
-        await smtp.SendMailAsync(mail);
+        using var client = new MailKit.Net.Smtp.SmtpClient();
+
+        await client.ConnectAsync(
+            _settings.Host,
+            _settings.Port,
+            SecureSocketOptions.SslOnConnect);
+
+        await client.AuthenticateAsync(
+            _settings.Username,
+            _settings.Password);
+
+        await client.SendAsync(message);
+
+        await client.DisconnectAsync(true);
     }
 }

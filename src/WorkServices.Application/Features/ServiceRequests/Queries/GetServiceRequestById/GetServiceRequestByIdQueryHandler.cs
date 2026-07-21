@@ -23,7 +23,7 @@ public sealed class GetServiceRequestByIdQueryHandler
         GetServiceRequestByIdQuery request,
         CancellationToken cancellationToken)
     {
-        var sr = await _repository.GetByIdAsync(request.ServiceRequestId);
+       var sr = await _repository.GetDetailsAsync(request.ServiceRequestId);
 
     if (sr is null)
         throw new NotFoundException("Service request not found");
@@ -41,7 +41,7 @@ public sealed class GetServiceRequestByIdQueryHandler
 
         AssignedArtisanId = assignment?.ArtisanId,
 
-       AssignedArtisan = string.Empty
+       AssignedArtisan = assignment?.Artisan?.FullName ?? "",
 };
 }
 }
