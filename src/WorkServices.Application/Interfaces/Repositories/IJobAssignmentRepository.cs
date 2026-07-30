@@ -15,4 +15,5 @@ public interface IJobAssignmentRepository
     
     Task<List<JobAssignment>> GetArtisanJobsAsync(Guid artisanId);
 
+    Task<JobAssignment?> GetByServiceRequestIdAsync(Guid serviceRequestId);
 }

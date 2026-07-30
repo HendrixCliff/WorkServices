@@ -1,7 +1,9 @@
 using MediatR;
 using WorkServices.Application.Interfaces;
+using WorkServices.Application.Interfaces.Security;
 using WorkServices.Application.Interfaces.Repositories;
 using WorkServices.Domain.Entities;
+using WorkServices.Application.Common.Exceptions;
 using WorkServices.Domain.Enums;
 using WorkServices.Application.Common.Exceptions;
 
@@ -11,6 +13,8 @@ public sealed class ApproveQuoteCommandHandler
     : IRequestHandler<ApproveQuoteCommand>
 {
     private readonly IQuoteRepository _quotes;
+
+    private readonly ICurrentUser _currentUser;
 
     private readonly IPaymentRepository _payments;
 
@@ -22,15 +26,17 @@ public sealed class ApproveQuoteCommandHandler
         IQuoteRepository quotes,
         IPaymentRepository payments,
         IUnitOfWork unitOfWork,
-        IServiceRequestRepository serviceRequests)
+        IServiceRequestRepository serviceRequests,
+        ICurrentUser currentUser)
     {
         _quotes = quotes;
         _payments = payments;
         _unitOfWork = unitOfWork;
         _serviceRequests = serviceRequests;
+        _currentUser = currentUser;
     }
 
-   public async Task Handle(
+  public async Task Handle(
     ApproveQuoteCommand request,
     CancellationToken cancellationToken)
 {
@@ -38,12 +44,33 @@ public sealed class ApproveQuoteCommandHandler
         await _quotes.GetByIdAsync(request.QuoteId)
         ?? throw new NotFoundException("Quote not found");
 
-    quote.Approve();
-
     var serviceRequest =
         await _serviceRequests.GetByIdAsync(
             quote.ServiceRequestId)
-        ?? throw new NotFoundException("Service request not found");
+        ?? throw new NotFoundException(
+            "Service request not found");
+
+   
+    if (!_currentUser.IsAuthenticated)
+    {
+        throw new UnauthorizedAccessException(
+            "User is not authenticated.");
+    }
+
+    if (serviceRequest.CustomerId != _currentUser.UserId)
+    {
+        throw new ForbiddenException(
+            "You are not allowed to approve this quote.");
+    }
+
+   
+    if (quote.Approved)
+    {
+        throw new ValidationException(
+            "Quote has already been approved.");
+    }
+
+    quote.Approve();
 
     serviceRequest.ApproveQuote();
 

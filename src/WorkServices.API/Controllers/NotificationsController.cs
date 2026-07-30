@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using WorkServices.Application.Features.Notification.Queries.GetNotifications;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WorkServices.API.Controllers;
 

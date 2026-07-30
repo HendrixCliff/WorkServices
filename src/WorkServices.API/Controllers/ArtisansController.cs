@@ -17,7 +17,8 @@ public sealed class ArtisansController : ControllerBase
     {
         _mediator = mediator;
     }
-
+     
+    [Authorize(Policy = "ArtisanOnly")]
     [HttpGet("jobs")]
     public async Task<IActionResult> GetJobs()
     {

@@ -5,6 +5,7 @@ using WorkServices.Application.Features.Payments.Commands.MarkPaymentSuccessful;
 using WorkServices.Application.Features.Payments.Queries.GetPaymentsByServiceRequest;
 using WorkServices.Application.Interfaces.Services;
 using WorkServices.Application.Interfaces.Repositories;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WorkServices.API.Controllers;
 
@@ -25,7 +26,8 @@ public sealed class PaymentsController : ControllerBase
         _paystack = paystack;
         _payments = payments;
     }
-
+    
+    [Authorize(Policy = "CustomerOnly")]
     [HttpPost("{paymentId:guid}/initialize")]
     public async Task<IActionResult> Initialize(Guid paymentId)
     {
@@ -38,6 +40,7 @@ public sealed class PaymentsController : ControllerBase
         });
     }
 
+    [Authorize(Policy = "CustomerOnly")]
     [HttpGet("verify")]
     public async Task<IActionResult> Verify(
         [FromQuery] string reference)

@@ -46,8 +46,6 @@ public async Task<IActionResult> ConfirmEmail(
     [FromQuery] Guid userId,
     [FromQuery] string token)
 {
-    Console.WriteLine($"UserId: {userId}");
-    Console.WriteLine($"Token : {token}");
 
     await _mediator.Send(new ConfirmEmailCommand(userId, token));
 

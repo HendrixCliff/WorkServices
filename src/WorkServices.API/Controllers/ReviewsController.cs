@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using WorkServices.Application.Features.Reviews.Commands.CreateReview;
 using WorkServices.Application.Features.Reviews.Queries.GetReviewsByArtisan;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WorkServices.API.Controllers;
 
@@ -18,6 +19,7 @@ public sealed class ReviewsController
         _mediator = mediator;
     }
 
+    [Authorize(Policy = "CustomerOnly")]
     [HttpPost]
     public async Task<IActionResult> Create(
         CreateReviewCommand command)

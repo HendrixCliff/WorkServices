@@ -60,4 +60,12 @@ public sealed class JobAssignmentRepository
             .ThenByDescending(x => x.AssignedAt)
             .ToListAsync();
     }
+
+    public async Task<JobAssignment?> GetByServiceRequestIdAsync(
+    Guid serviceRequestId)
+    {
+        return await _db.JobAssignments
+            .FirstOrDefaultAsync(x =>
+                x.ServiceRequestId == serviceRequestId);
+    }
 }

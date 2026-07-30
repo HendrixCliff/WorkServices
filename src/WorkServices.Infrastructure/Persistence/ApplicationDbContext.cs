@@ -22,6 +22,8 @@ public sealed class ApplicationDbContext : DbContext
 
     public DbSet<ServiceRequest> ServiceRequests => Set<ServiceRequest>();
 
+    public DbSet<Quote> Quotes => Set<Quote>();
+
     public DbSet<JobAssignment> JobAssignments => Set<JobAssignment>();
 
     public DbSet<Payment> Payments => Set<Payment>();

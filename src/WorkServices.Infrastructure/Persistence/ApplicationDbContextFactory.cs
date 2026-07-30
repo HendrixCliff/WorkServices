@@ -13,7 +13,7 @@ public sealed class ApplicationDbContextFactory
             Directory.GetCurrentDirectory(),
             "../WorkServices.API");
 
-        // Load the same .env file used by the API
+      
         Env.Load(Path.Combine(apiPath, ".env"));
 
         var connectionString =

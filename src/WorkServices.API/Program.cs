@@ -26,14 +26,21 @@ using System.Threading.RateLimiting;
 using WorkServices.Application.Common.Exceptions;
 using WorkServices.Infrastructure.AI;
 using WorkServices.Application.Common.Security;
+using WorkServices.Application.Interfaces.Security;
+using WorkServices.Infrastructure.Authentication;
 
-Env.Load();
+Env.Load("/home/ubuntu/.env");
 
 
 var builder = WebApplication.CreateBuilder(args);
 Console.WriteLine(typeof(Program).Assembly.FullName);
 
 builder.Configuration.AddEnvironmentVariables();
+
+Console.WriteLine($"DB_HOST={builder.Configuration["DB_HOST"]}");
+Console.WriteLine($"DB_PORT={builder.Configuration["DB_PORT"]}");
+Console.WriteLine($"DB_DATABASE={builder.Configuration["DB_DATABASE"]}");
+Console.WriteLine($"DB_USERNAME={builder.Configuration["DB_USERNAME"]}");
 
 builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
 {
@@ -116,11 +123,7 @@ builder.Services
             };
     });
 
-// foreach (var pair in builder.Configuration.AsEnumerable())
-// {
-//     if (pair.Key.Contains("JWT"))
-//         Console.WriteLine($"{pair.Key} = {pair.Value}");
-// }
+
 
 
 builder.Services.Configure<SmtpSettings>(options =>
@@ -223,6 +226,9 @@ builder.Services.AddScoped<IEmailConfirmationService, EmailConfirmationService>(
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
 builder.Services.AddScoped<IPaystackService, PaystackService>();
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpClient();
 
