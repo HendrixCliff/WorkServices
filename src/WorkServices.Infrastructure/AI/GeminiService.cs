@@ -4,7 +4,7 @@ using WorkServices.Application.Interfaces;
 
 namespace WorkServices.Infrastructure.AI;
 
-public class GeminiService : IAiService
+public sealed class GeminiService : IAiService
 {
     private readonly HttpClient _httpClient;
 
@@ -23,45 +23,43 @@ public class GeminiService : IAiService
                 "GEMINI_API_KEY not configured.");
 
         var request = new
-{
-    contents = new[]
-    {
-        new
         {
-            parts = new[]
+            contents = new[]
             {
                 new
                 {
-                    text = prompt
+                    parts = new[]
+                    {
+                        new
+                        {
+                            text = prompt
+                        }
+                    }
                 }
             }
-        }
-    }
-};
+        };
+
+        var url =
+            $"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={apiKey}";
 
         var response =
             await _httpClient.PostAsJsonAsync(
-                $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={apiKey}",
+                url,
                 request,
                 cancellationToken);
 
         response.EnsureSuccessStatusCode();
 
-        using var stream =
-            await response.Content.ReadAsStreamAsync(cancellationToken);
+        var result =
+            await response.Content.ReadFromJsonAsync<JsonElement>(
+                cancellationToken);
 
-        using var document =
-            await JsonDocument.ParseAsync(
-                stream,
-                cancellationToken: cancellationToken);
-
-        return document
-            .RootElement
+        return result
             .GetProperty("candidates")[0]
             .GetProperty("content")
             .GetProperty("parts")[0]
             .GetProperty("text")
             .GetString()
-            ?? "";
+            ?? string.Empty;
     }
 }
