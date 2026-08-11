@@ -7,11 +7,13 @@ using WorkServices.Application.Features.JobAssignments.Commands.CompleteJob;
 using WorkServices.Application.Features.JobAssignments.Commands.RejectJob;
 using WorkServices.Application.Features.JobAssignments.Commands.StartJob;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace WorkServices.API.Controllers;
 
 [ApiController]
 [Route("api/job-assignments")]
+[EnableRateLimiting("ApiPolicy")]
 public sealed class JobAssignmentsController : ControllerBase
 {
     private readonly IMediator _mediator;

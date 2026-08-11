@@ -6,11 +6,13 @@ using WorkServices.Application.Features.Payments.Queries.GetPaymentsByServiceReq
 using WorkServices.Application.Interfaces.Services;
 using WorkServices.Application.Interfaces.Repositories;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace WorkServices.API.Controllers;
 
 [ApiController]
 [Route("api/payments")]
+[EnableRateLimiting("ApiPolicy")]
 public sealed class PaymentsController : ControllerBase
 {
     private readonly IMediator _mediator;

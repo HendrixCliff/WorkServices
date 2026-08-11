@@ -3,11 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using WorkServices.Application.Features.Reviews.Commands.CreateReview;
 using WorkServices.Application.Features.Reviews.Queries.GetReviewsByArtisan;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace WorkServices.API.Controllers;
 
 [ApiController]
 [Route("api/reviews")]
+[EnableRateLimiting("ApiPolicy")]
 public sealed class ReviewsController
     : ControllerBase
 {

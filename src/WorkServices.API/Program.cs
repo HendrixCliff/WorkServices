@@ -23,11 +23,12 @@ using WorkServices.Infrastructure.Persistence.Repositories;
 using Microsoft.OpenApi.Models;
 using WorkServices.API.Services;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using WorkServices.Application.Common.Exceptions;
 using WorkServices.Infrastructure.AI;
 using WorkServices.Application.Common.Security;
 using WorkServices.Application.Interfaces.Security;
-using WorkServices.Infrastructure.Authentication;
+
 
 Env.Load("/home/ubuntu/.env");
 
@@ -236,17 +237,27 @@ builder.Services.AddHealthChecks().AddDbContextCheck<ApplicationDbContext>();
 
 builder.Services.AddRateLimiter(options =>
 {
-    options.GlobalLimiter =
-        PartitionedRateLimiter.Create<HttpContext, string>(context =>
-            RateLimitPartition.GetFixedWindowLimiter(
-                partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "global",
-                factory: _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = 100,
-                    Window = TimeSpan.FromMinutes(1),
-                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                    QueueLimit = 10
-                }));
+    options.AddFixedWindowLimiter(
+        policyName: "AiPolicy",
+        configureOptions: limiterOptions =>
+        {
+            limiterOptions.PermitLimit = 5;
+            limiterOptions.Window = TimeSpan.FromMinutes(1);
+            limiterOptions.QueueProcessingOrder =
+                QueueProcessingOrder.OldestFirst;
+            limiterOptions.QueueLimit = 2;
+        });
+
+    options.AddFixedWindowLimiter(
+        policyName: "ApiPolicy",
+        configureOptions: limiterOptions =>
+        {
+            limiterOptions.PermitLimit = 100;
+            limiterOptions.Window = TimeSpan.FromMinutes(1);
+            limiterOptions.QueueProcessingOrder =
+                QueueProcessingOrder.OldestFirst;
+            limiterOptions.QueueLimit = 10;
+        });
 });
 
 builder.Services.AddMediatR(cfg =>

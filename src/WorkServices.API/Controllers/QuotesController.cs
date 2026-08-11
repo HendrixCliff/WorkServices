@@ -4,11 +4,13 @@ using WorkServices.Application.Features.Quotes.Commands.ApproveQuote;
 using WorkServices.Application.Features.Quotes.Commands.CreateQuote;
 using WorkServices.Application.Features.Quotes.Queries.GetQuoteByServiceRequest;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace WorkServices.API.Controllers;
 
 [ApiController]
 [Route("api/quotes")]
+[EnableRateLimiting("ApiPolicy")]
 public sealed class QuotesController : ControllerBase
 {
     private readonly IMediator _mediator;

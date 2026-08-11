@@ -5,11 +5,13 @@ using WorkServices.Application.Features.Auth.Commands.Login;
 using WorkServices.Application.Features.Auth.Commands.RefreshToken;
 using WorkServices.Application.Features.Auth.Commands.RegisterArtisan;
 using WorkServices.Application.Features.Auth.Commands.RegisterCustomer;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace WorkServices.API.Controllers;
 
 [ApiController]
 [Route("api/auth")]
+[EnableRateLimiting("ApiPolicy")]
 public sealed class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;

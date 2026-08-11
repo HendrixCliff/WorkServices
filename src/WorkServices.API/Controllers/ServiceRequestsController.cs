@@ -7,9 +7,13 @@ using WorkServices.Application.Features.ServiceRequests.Queries.GetCustomerReque
 using WorkServices.Application.Features.ServiceRequests.Queries.GetMyRequests;
 using WorkServices.Application.Features.ServiceRequests.Queries.GetServiceRequestById;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
+
+
 
 [ApiController]
 [Route("api/service-requests")]
+[EnableRateLimiting("ApiPolicy")]
 public class ServiceRequestsController
     : ControllerBase
 {
@@ -20,6 +24,7 @@ public class ServiceRequestsController
     {
         _mediator = mediator;
     }
+ 
 
     [HttpPost]
     public async Task<IActionResult> Create(
