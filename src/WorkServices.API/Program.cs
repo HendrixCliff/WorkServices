@@ -342,11 +342,13 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseForwardedHeaders();
+
 app.UseSerilogRequestLogging();
 
-app.UseRouting();
-
 app.UseHttpsRedirection();
+
+app.UseRouting();
 
 app.UseMiddleware<ExceptionMiddleware>();
 
@@ -356,18 +358,17 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
-app.MapHub<NotificationHub>("/hubs/notifications");
+app.UseHttpMetrics();
 
 app.MapControllers();
 
-app.UseHttpMetrics();
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 app.MapHealthChecks("/health");
 
 app.MapMetrics();
 
 await ApplicationDbSeeder.SeedAdminAsync(app.Services);
-
 
 app.Run();
 

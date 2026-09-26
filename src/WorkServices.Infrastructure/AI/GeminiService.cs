@@ -14,52 +14,51 @@ public sealed class GeminiService : IAiService
     }
 
     public async Task<string> GenerateAsync(
-    string prompt,
-    CancellationToken cancellationToken = default)
-{
-    var apiKey =
-        Environment.GetEnvironmentVariable("GEMINI_API_KEY")
-        ?? throw new InvalidOperationException(
-            "GEMINI_API_KEY not configured.");
-
-    var request = new
+        string prompt,
+        CancellationToken cancellationToken = default)
     {
-        contents = new[]
+        var apiKey =
+            Environment.GetEnvironmentVariable("GEMINI_API_KEY")
+            ?? throw new InvalidOperationException(
+                "GEMINI_API_KEY not configured.");
+
+        var request = new
         {
-            new
+            contents = new[]
             {
-                parts = new[]
+                new
                 {
-                    new
+                    parts = new[]
                     {
-                        text = prompt
+                        new
+                        {
+                            text = prompt
+                        }
                     }
                 }
             }
-        }
-    };
+        };
 
-    var url =
-        $"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={apiKey}";
+        var url =
+            $"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={apiKey}";
 
-    var response =
-        await _httpClient.PostAsJsonAsync(
+        var response = await _httpClient.PostAsJsonAsync(
             url,
             request,
             cancellationToken);
 
-    response.EnsureSuccessStatusCode();
+        response.EnsureSuccessStatusCode();
 
-    var result =
-        await response.Content.ReadFromJsonAsync<JsonElement>(
-            cancellationToken);
+        var result =
+            await response.Content.ReadFromJsonAsync<JsonElement>(
+                cancellationToken);
 
-    return result
-        .GetProperty("candidates")[0]
-        .GetProperty("content")
-        .GetProperty("parts")[0]
-        .GetProperty("text")
-        .GetString()
-        ?? string.Empty;
-}
+        return result
+            .GetProperty("candidates")[0]
+            .GetProperty("content")
+            .GetProperty("parts")[0]
+            .GetProperty("text")
+            .GetString()
+            ?? string.Empty;
+    }
 }
