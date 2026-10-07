@@ -363,6 +363,9 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
+
+
+app.UseForwardedHeaders();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -376,9 +379,7 @@ if (app.Environment.IsDevelopment())
         options.RoutePrefix = string.Empty;
     });
 }
-
-app.UseForwardedHeaders();
-if (!app.Environment.IsDevelopment())
+else 
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
