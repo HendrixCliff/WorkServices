@@ -7,6 +7,8 @@ using System.Text;
 using StackExchange.Redis;
 using Serilog;
 using Prometheus;
+using Microsoft.AspNetCore.HttpOverrides;
+using System.Net;
 using WorkServices.Infrastructure.Persistence.Configurations;
 using Microsoft.Extensions.DependencyInjection;
 using WorkServices.Application.Interfaces.Repositories;
@@ -26,15 +28,25 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using WorkServices.Application.Common.Exceptions;
 using WorkServices.Infrastructure.AI;
+using System.Security.Claims;
 using WorkServices.Application.Common.Security;
 using WorkServices.Application.Interfaces.Security;
 
 
-Env.Load("/home/ubuntu/.env");
 
 
 var builder = WebApplication.CreateBuilder(args);
 Console.WriteLine(typeof(Program).Assembly.FullName);
+
+if (builder.Environment.IsDevelopment())
+{
+    Env.Load();
+}
+else
+{
+    // EC2 / production
+    Env.Load("/home/ubuntu/.env");
+}
 
 builder.Configuration.AddEnvironmentVariables();
 
@@ -62,6 +74,7 @@ builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =
             npgsql.MigrationsAssembly("WorkServices.Infrastructure");
         });
 });
+
 builder.Services
     .AddAuthentication(options =>
     {
@@ -75,11 +88,15 @@ builder.Services
     {
         var configuration = builder.Configuration;
 
-        var jwtKey = configuration["JWT_KEY"];
-        var jwtIssuer = configuration["JWT_ISSUER"];
-        var jwtAudience = configuration["JWT_AUDIENCE"];
+        var jwtKey =
+            configuration["JWT_KEY"];
 
-       
+        var jwtIssuer =
+            configuration["JWT_ISSUER"];
+
+        var jwtAudience =
+            configuration["JWT_AUDIENCE"];
+
         if (string.IsNullOrWhiteSpace(jwtKey))
         {
             throw new NotFoundException(
@@ -99,33 +116,51 @@ builder.Services
 
                 IssuerSigningKey =
                     new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(jwtKey))
+                        Encoding.UTF8.GetBytes(jwtKey)),
+
+                NameClaimType = ClaimTypes.Name,
+                RoleClaimType = ClaimTypes.Role
             };
 
-        options.Events =
-            new JwtBearerEvents
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
             {
-                OnMessageReceived = context =>
+                
+                if (context.Request.Cookies.TryGetValue(
+                        "workservices.access",
+                        out var accessToken)
+                    && !string.IsNullOrWhiteSpace(accessToken))
                 {
-                    var accessToken =
-                        context.Request.Query["access_token"];
-
-                    var path =
-                        context.HttpContext.Request.Path;
-
-                    if (!string.IsNullOrEmpty(accessToken) &&
-                        path.StartsWithSegments("/hubs/notifications"))
-                    {
-                        context.Token = accessToken;
-                    }
-
-                    return Task.CompletedTask;
+                    context.Token = accessToken;
                 }
-            };
+
+                var accessTokenFromQuery =
+                    context.Request.Query["access_token"];
+
+                var path =
+                    context.HttpContext.Request.Path;
+
+                if (!string.IsNullOrEmpty(accessTokenFromQuery)
+                    && path.StartsWithSegments(
+                        "/hubs/notifications"))
+                {
+                    context.Token = accessTokenFromQuery;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
     });
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto;
 
-
+    options.KnownProxies.Add(IPAddress.Loopback);
+});
 
 builder.Services.Configure<SmtpSettings>(options =>
 {
@@ -343,10 +378,16 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseForwardedHeaders();
-
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
 app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
+
+app.UseStaticFiles();
 
 app.UseRouting();
 
