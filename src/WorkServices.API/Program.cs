@@ -226,6 +226,22 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
 
     return mux;
 });
+const string FrontendCorsPolicy = "FrontendCorsPolicy";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(FrontendCorsPolicy, policy =>
+    {
+        policy
+            .WithOrigins(
+                "http://localhost:5012",
+                "https://localhost:5012",
+                "https://taskconnect.duckdns.org")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {
@@ -391,6 +407,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseCors(FrontendCorsPolicy);
 
 app.UseMiddleware<ExceptionMiddleware>();
 
