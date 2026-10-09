@@ -235,7 +235,6 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(
                 "http://localhost:5012",
-                "https://localhost:5012",
                 "https://taskconnect.duckdns.org")
             .AllowAnyHeader()
             .AllowAnyMethod()
