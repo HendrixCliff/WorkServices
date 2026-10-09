@@ -148,26 +148,41 @@ public async Task<IActionResult> Refresh()
     return NoContent();
 }
 
-    [HttpPost("logout")]
-    public IActionResult Logout()
-    {
-        Response.Cookies.Delete(
-            AccessTokenCookie,
-            new CookieOptions
-            {
-                Path = "/"
-            });
+   [HttpPost("logout")]
+public IActionResult Logout()
+{
+    Response.Cookies.Delete(
+        AccessTokenCookie,
+        new CookieOptions
+        {
+            Path = "/"
+        });
 
-        Response.Cookies.Delete(
-            RefreshTokenCookie,
-            new CookieOptions
-            {
-                Path = "/api/auth/refresh"
-            });
+    Response.Cookies.Delete(
+        RefreshTokenCookie,
+        new CookieOptions
+        {
+            Path = "/"
+        });
 
-        return NoContent();
-    }
+    return NoContent();
+}
 
+private void SetRefreshTokenCookie(string refreshToken)
+{
+    Response.Cookies.Append(
+        RefreshTokenCookie,
+        refreshToken,
+        new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+            IsEssential = true,
+            Path = "/",
+            MaxAge = TimeSpan.FromDays(30)
+        });
+}
     private void SetAccessTokenCookie(string accessToken)
     {
         Response.Cookies.Append(
