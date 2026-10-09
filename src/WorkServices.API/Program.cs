@@ -123,34 +123,70 @@ builder.Services
             };
 
         options.Events = new JwtBearerEvents
+{
+    OnMessageReceived = context =>
+    {
+        var logger = context.HttpContext.RequestServices
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger("JwtCookieDiagnostics");
+
+        var hasCookie = context.Request.Cookies.TryGetValue(
+            "workservices.access",
+            out var accessToken);
+
+        if (hasCookie && !string.IsNullOrWhiteSpace(accessToken))
         {
-            OnMessageReceived = context =>
-            {
-                
-                if (context.Request.Cookies.TryGetValue(
-                        "workservices.access",
-                        out var accessToken)
-                    && !string.IsNullOrWhiteSpace(accessToken))
-                {
-                    context.Token = accessToken;
-                }
+            context.Token = accessToken;
+        }
 
-                var accessTokenFromQuery =
-                    context.Request.Query["access_token"];
+        
+        var accessTokenFromQuery =
+            context.Request.Query["access_token"];
 
-                var path =
-                    context.HttpContext.Request.Path;
+        var path = context.HttpContext.Request.Path;
 
-                if (!string.IsNullOrEmpty(accessTokenFromQuery)
-                    && path.StartsWithSegments(
-                        "/hubs/notifications"))
-                {
-                    context.Token = accessTokenFromQuery;
-                }
+        if (!string.IsNullOrEmpty(accessTokenFromQuery)
+            && path.StartsWithSegments("/hubs/notifications"))
+        {
+            context.Token = accessTokenFromQuery;
+        }
 
-                return Task.CompletedTask;
-            }
-        };
+        logger.LogInformation(
+            "JWT diagnostic: Path={Path}, AccessCookiePresent={CookiePresent}, TokenSelected={TokenSelected}",
+            path,
+            hasCookie && !string.IsNullOrWhiteSpace(accessToken),
+            !string.IsNullOrWhiteSpace(context.Token));
+
+        return Task.CompletedTask;
+    },
+
+    OnAuthenticationFailed = context =>
+    {
+        var logger = context.HttpContext.RequestServices
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger("JwtCookieDiagnostics");
+
+        logger.LogError(
+            context.Exception,
+            "JWT authentication failed for {Path}",
+            context.Request.Path);
+
+        return Task.CompletedTask;
+    },
+
+    OnTokenValidated = context =>
+    {
+        var logger = context.HttpContext.RequestServices
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger("JwtCookieDiagnostics");
+
+        logger.LogInformation(
+            "JWT successfully validated for {Path}",
+            context.Request.Path);
+
+        return Task.CompletedTask;
+    }
+};
     });
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
