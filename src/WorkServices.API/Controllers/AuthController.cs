@@ -167,7 +167,7 @@ private void SetAccessTokenCookie(string accessToken)
         {
             HttpOnly = true,
             Secure = true,
-            SameSite = SameSiteMode.Lax,
+            SameSite = SameSiteMode.None,
             IsEssential = true,
             Path = "/",
             MaxAge = TimeSpan.FromMinutes(15)
