@@ -123,11 +123,10 @@ public sealed class AuthController : ControllerBase
         });
     }
 
-    [HttpPost("refresh")]
+  [HttpPost("refresh")]
 public async Task<IActionResult> Refresh()
 {
-    var refreshToken =
-        Request.Cookies[RefreshTokenCookie];
+    var refreshToken = Request.Cookies[RefreshTokenCookie];
 
     if (string.IsNullOrWhiteSpace(refreshToken))
     {
@@ -137,35 +136,42 @@ public async Task<IActionResult> Refresh()
         });
     }
 
-    var command =
-        new RefreshTokenCommand(refreshToken);
-
-    var newAccessToken =
-        await _mediator.Send(command);
+    var command = new RefreshTokenCommand(refreshToken);
+    var newAccessToken = await _mediator.Send(command);
 
     SetAccessTokenCookie(newAccessToken);
 
     return NoContent();
 }
 
-   [HttpPost("logout")]
+[HttpPost("logout")]
 public IActionResult Logout()
 {
     Response.Cookies.Delete(
         AccessTokenCookie,
-        new CookieOptions
-        {
-            Path = "/"
-        });
+        new CookieOptions { Path = "/" });
 
     Response.Cookies.Delete(
         RefreshTokenCookie,
-        new CookieOptions
-        {
-            Path = "/"
-        });
+        new CookieOptions { Path = "/" });
 
     return NoContent();
+}
+
+private void SetAccessTokenCookie(string accessToken)
+{
+    Response.Cookies.Append(
+        AccessTokenCookie,
+        accessToken,
+        new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+            IsEssential = true,
+            Path = "/",
+            MaxAge = TimeSpan.FromMinutes(15)
+        });
 }
 
 private void SetRefreshTokenCookie(string refreshToken)
@@ -183,37 +189,4 @@ private void SetRefreshTokenCookie(string refreshToken)
             MaxAge = TimeSpan.FromDays(30)
         });
 }
-    private void SetAccessTokenCookie(string accessToken)
-    {
-        Response.Cookies.Append(
-            AccessTokenCookie,
-            accessToken,
-            new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Lax,
-                IsEssential = true,
-                Path = "/",
-                MaxAge = TimeSpan.FromMinutes(15)
-            });
-    }
-
-    private void SetRefreshTokenCookie(string refreshToken)
-    {
-        Response.Cookies.Append(
-            RefreshTokenCookie,
-            refreshToken,
-            new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Lax,
-                IsEssential = true,
-
-               
-
-                MaxAge = TimeSpan.FromDays(30)
-            });
-    }
 }
