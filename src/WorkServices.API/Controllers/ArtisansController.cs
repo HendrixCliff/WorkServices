@@ -1,9 +1,10 @@
+
 using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WorkServices.Application.Features.JobAssignments.Queries.GetArtisanJobs;
 using Microsoft.AspNetCore.RateLimiting;
+using WorkServices.Application.Features.JobAssignments.Queries.GetArtisanJobs;
 
 namespace WorkServices.API.Controllers;
 
@@ -19,19 +20,23 @@ public sealed class ArtisansController : ControllerBase
     {
         _mediator = mediator;
     }
-     
-    [Authorize(Policy = "ArtisanOnly")]
-    [HttpGet("jobs")]
-    public async Task<IActionResult> GetJobs()
-    {
-        var artisanId = Guid.Parse(
-            User.FindFirstValue(
-                ClaimTypes.NameIdentifier)!);
 
-        var jobs =
-            await _mediator.Send(
-                new GetArtisanJobsQuery(
-                    artisanId));
+    [HttpGet("jobs")]
+    [Authorize(Policy = "ArtisanOnly")]
+    public async Task<IActionResult> GetJobs(
+        CancellationToken cancellationToken)
+    {
+        var artisanIdValue = User.FindFirstValue(
+            ClaimTypes.NameIdentifier);
+
+        if (!Guid.TryParse(artisanIdValue, out var artisanId))
+        {
+            return Unauthorized();
+        }
+
+        var jobs = await _mediator.Send(
+            new GetArtisanJobsQuery(artisanId),
+            cancellationToken);
 
         return Ok(jobs);
     }
