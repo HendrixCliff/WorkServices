@@ -12,7 +12,6 @@ namespace WorkServices.API.Controllers;
 
 [ApiController]
 [Route("api/service-requests")]
-[Authorize]
 [EnableRateLimiting("ApiPolicy")]
 public sealed class ServiceRequestsController : ControllerBase
 {
@@ -29,9 +28,7 @@ public sealed class ServiceRequestsController : ControllerBase
         [FromBody] CreateServiceRequestCommand command,
         CancellationToken cancellationToken)
     {
-        var id = await _mediator.Send(
-            command,
-            cancellationToken);
+        var id = await _mediator.Send(command, cancellationToken);
 
         return CreatedAtAction(
             nameof(GetById),
@@ -60,6 +57,7 @@ public sealed class ServiceRequestsController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(
         Guid id,
         CancellationToken cancellationToken)
@@ -67,6 +65,11 @@ public sealed class ServiceRequestsController : ControllerBase
         var request = await _mediator.Send(
             new GetServiceRequestByIdQuery(id),
             cancellationToken);
+
+        if (request is null)
+        {
+            return NotFound();
+        }
 
         return Ok(request);
     }
