@@ -262,6 +262,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
 
     return mux;
 });
+
 const string FrontendCorsPolicy = "FrontendCorsPolicy";
 
 builder.Services.AddCors(options =>
@@ -271,8 +272,7 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(
                 "http://localhost:5012",
-                "https://taskconnectui-workservices.vercel.app",
-                "https://taskconnect.duckdns.org")
+                "https://taskconnectui-workservices.vercel.app")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
