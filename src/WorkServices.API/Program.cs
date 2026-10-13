@@ -75,6 +75,22 @@ builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =
         });
 });
 
+const string FrontendCorsPolicy = "FrontendCorsPolicy";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(FrontendCorsPolicy, policy =>
+    {
+        policy
+            .WithOrigins(
+                "http://localhost:5012",
+                "https://taskconnectui-workservices.vercel.app")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
 builder.Services
     .AddAuthentication(options =>
     {
@@ -253,21 +269,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
     return mux;
 });
 
-const string FrontendCorsPolicy = "FrontendCorsPolicy";
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(FrontendCorsPolicy, policy =>
-    {
-        policy
-            .WithOrigins(
-                "http://localhost:5012",
-                "https://taskconnectui-workservices.vercel.app")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
-});
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {
