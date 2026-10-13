@@ -183,7 +183,7 @@ private void SetRefreshTokenCookie(string refreshToken)
         {
             HttpOnly = true,
             Secure = true,
-            SameSite = SameSiteMode.Lax,
+            SameSite = SameSiteMode.None,
             IsEssential = true,
             Path = "/",
             MaxAge = TimeSpan.FromDays(30)

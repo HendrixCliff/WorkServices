@@ -125,40 +125,30 @@ builder.Services
         options.Events = new JwtBearerEvents
 {
     OnMessageReceived = context =>
-    {
-        var logger = context.HttpContext.RequestServices
-            .GetRequiredService<ILoggerFactory>()
-            .CreateLogger("JwtCookieDiagnostics");
+{
+    var path = context.HttpContext.Request.Path;
 
-        var hasCookie = context.Request.Cookies.TryGetValue(
+    
+    if (context.Request.Cookies.TryGetValue(
             "workservices.access",
-            out var accessToken);
+            out var accessToken)
+        && !string.IsNullOrWhiteSpace(accessToken))
+    {
+        context.Token = accessToken;
+    }
 
-        if (hasCookie && !string.IsNullOrWhiteSpace(accessToken))
-        {
-            context.Token = accessToken;
-        }
+    
+    if (path.StartsWithSegments("/hubs/notifications")
+        && context.Request.Query.TryGetValue(
+            "access_token",
+            out var queryToken)
+        && !string.IsNullOrWhiteSpace(queryToken))
+    {
+        context.Token = queryToken;
+    }
 
-        
-        var accessTokenFromQuery =
-            context.Request.Query["access_token"];
-
-        var path = context.HttpContext.Request.Path;
-
-        if (!string.IsNullOrEmpty(accessTokenFromQuery)
-            && path.StartsWithSegments("/hubs/notifications"))
-        {
-            context.Token = accessTokenFromQuery;
-        }
-
-        logger.LogInformation(
-            "JWT diagnostic: Path={Path}, AccessCookiePresent={CookiePresent}, TokenSelected={TokenSelected}",
-            path,
-            hasCookie && !string.IsNullOrWhiteSpace(accessToken),
-            !string.IsNullOrWhiteSpace(context.Token));
-
-        return Task.CompletedTask;
-    },
+    return Task.CompletedTask;
+},
 
     OnAuthenticationFailed = context =>
     {
