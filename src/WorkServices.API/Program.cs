@@ -271,6 +271,7 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(
                 "http://localhost:5012",
+                "https://taskconnectui-workservices.vercel.app",
                 "https://taskconnect.duckdns.org")
             .AllowAnyHeader()
             .AllowAnyMethod()
