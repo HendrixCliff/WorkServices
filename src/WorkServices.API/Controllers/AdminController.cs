@@ -27,12 +27,14 @@ public sealed class AdminController : ControllerBase
         return Ok(requests);
     }
 
-    [HttpGet("artisans")]
-    public async Task<IActionResult> GetArtisans()
-    {
-        var artisans = await _mediator.Send(
-            new GetArtisansForAssignmentQuery());
+ [HttpGet("artisans")]
+public async Task<ActionResult<IReadOnlyList<ArtisanForAssignmentDto>>>
+    GetArtisans(CancellationToken cancellationToken)
+{
+    var artisans = await _mediator.Send(
+        new GetArtisansForAssignmentQuery(),
+        cancellationToken);
 
-        return Ok(artisans);
-    }
+    return Ok(artisans);
+}
 }
