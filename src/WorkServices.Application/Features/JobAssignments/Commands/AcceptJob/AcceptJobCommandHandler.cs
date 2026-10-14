@@ -1,7 +1,7 @@
 using MediatR;
-using WorkServices.Application.Interfaces.Repositories;
-using WorkServices.Application.Interfaces;
 using WorkServices.Application.Common.Exceptions;
+using WorkServices.Application.Interfaces;
+using WorkServices.Application.Interfaces.Repositories;
 
 namespace WorkServices.Application.Features.JobAssignments.Commands.AcceptJob;
 
@@ -9,7 +9,6 @@ public sealed class AcceptJobCommandHandler
     : IRequestHandler<AcceptJobCommand>
 {
     private readonly IJobAssignmentRepository _repository;
-
     private readonly IUnitOfWork _unitOfWork;
 
     public AcceptJobCommandHandler(
@@ -24,16 +23,24 @@ public sealed class AcceptJobCommandHandler
         AcceptJobCommand request,
         CancellationToken cancellationToken)
     {
-        var assignment =
-            await _repository.GetByIdAsync(
-                request.AssignmentId);
+        var assignment = await _repository.GetByIdAsync(
+            request.AssignmentId);
 
         if (assignment is null)
-            throw new NotFoundException("Assignment not found");
+        {
+            throw new NotFoundException("Assignment not found.");
+        }
+
+      
+        if (assignment.ArtisanId != request.ArtisanId)
+        {
+            
+            throw new NotFoundException("Assignment not found.");
+        }
+
 
         assignment.Accept();
 
-        await _unitOfWork.SaveChangesAsync(
-            cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

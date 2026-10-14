@@ -7,6 +7,7 @@ using WorkServices.Application.Interfaces.Services;
 using WorkServices.Application.Interfaces.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
+using WorkServices.Domain.Enums;
 
 namespace WorkServices.API.Controllers;
 
@@ -30,11 +31,20 @@ public sealed class PaymentsController : ControllerBase
     }
     
     [Authorize(Policy = "CustomerOnly")]
-    [HttpPost("{paymentId:guid}/initialize")]
-    public async Task<IActionResult> Initialize(Guid paymentId)
+    [HttpPost("service-request/{serviceRequestId:guid}/initialize")]
+    public async Task<IActionResult> Initialize(
+        Guid serviceRequestId,
+        [FromQuery] PaymentType paymentType)
     {
+        if (!Enum.IsDefined(paymentType))
+        {
+            return BadRequest("Invalid payment type.");
+        }
+
         var url = await _mediator.Send(
-            new InitializePaymentCommand(paymentId));
+            new InitializePaymentCommand(
+                serviceRequestId,
+                paymentType));
 
         return Ok(new
         {

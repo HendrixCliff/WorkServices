@@ -39,12 +39,19 @@ public sealed class JobAssignmentsController : ControllerBase
     [HttpPost("{assignmentId:guid}/accept")]
     public async Task<IActionResult> Accept(Guid assignmentId)
     {
+        var artisanIdValue = User.FindFirstValue(
+            ClaimTypes.NameIdentifier);
+
+        if (!Guid.TryParse(artisanIdValue, out var artisanId))
+        {
+            return Unauthorized();
+        }
+
         await _mediator.Send(
-            new AcceptJobCommand(assignmentId));
+            new AcceptJobCommand(assignmentId, artisanId));
 
         return NoContent();
     }
-
     
     [Authorize(Policy = "ArtisanOnly")]
     [HttpPost("{assignmentId:guid}/reject")]

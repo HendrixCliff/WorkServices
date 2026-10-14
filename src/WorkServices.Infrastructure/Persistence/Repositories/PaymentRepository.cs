@@ -1,57 +1,57 @@
 using Microsoft.EntityFrameworkCore;
 using WorkServices.Application.Interfaces.Repositories;
 using WorkServices.Domain.Entities;
+using WorkServices.Domain.Enums;
 
 namespace WorkServices.Infrastructure.Persistence.Repositories;
 
-public sealed class PaymentRepository
-    : IPaymentRepository
+public sealed class PaymentRepository : IPaymentRepository
 {
     private readonly ApplicationDbContext _db;
 
-    public PaymentRepository(
-        ApplicationDbContext db)
+    public PaymentRepository(ApplicationDbContext db)
     {
         _db = db;
     }
 
-    public async Task AddAsync(
-        Payment payment)
+    public async Task AddAsync(Payment payment)
     {
-        await _db.Payments.AddAsync(
-            payment);
+        await _db.Payments.AddAsync(payment);
     }
 
-    public async Task<Payment?> GetByIdAsync(
-        Guid id)
+    public async Task<Payment?> GetByIdAsync(Guid id)
     {
         return await _db.Payments
-            .FirstOrDefaultAsync(
-                x => x.Id == id);
+            .FirstOrDefaultAsync(x => x.Id == id);
     }
 
-
-
-    public async Task<List<Payment>>
-        GetByRequestIdAsync(
-            Guid requestId)
+    public async Task<Payment?> GetPendingByServiceRequestAndTypeAsync(
+        Guid serviceRequestId,
+        PaymentType paymentType)
     {
         return await _db.Payments
             .Where(x =>
-                x.ServiceRequestId ==
-                requestId)
+                x.ServiceRequestId == serviceRequestId &&
+                x.Type == paymentType &&
+                x.Status == PaymentStatus.Pending)
+            .OrderByDescending(x => x.CreatedAt)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<List<Payment>> GetByRequestIdAsync(Guid requestId)
+    {
+        return await _db.Payments
+            .Where(x => x.ServiceRequestId == requestId)
             .ToListAsync();
     }
 
-    public void Update(
-        Payment payment)
+    public void Update(Payment payment)
     {
-        _db.Payments.Update(
-            payment);
+        _db.Payments.Update(payment);
     }
 
-    public async Task<List<Payment>> GetByServiceRequestIdAsync( Guid serviceRequestId)
-    
+    public async Task<List<Payment>> GetByServiceRequestIdAsync(
+        Guid serviceRequestId)
     {
         return await _db.Payments
             .Where(x => x.ServiceRequestId == serviceRequestId)
@@ -59,12 +59,10 @@ public sealed class PaymentRepository
             .ToListAsync();
     }
 
-    public async Task<Payment?> GetByReferenceAsync(
-    string reference)
-{
-    return await _db.Payments
-        .Include(x => x.ServiceRequest)
-        .FirstOrDefaultAsync(x => x.Reference == reference);
-}
-
+    public async Task<Payment?> GetByReferenceAsync(string reference)
+    {
+        return await _db.Payments
+            .Include(x => x.ServiceRequest)
+            .FirstOrDefaultAsync(x => x.Reference == reference);
+    }
 }

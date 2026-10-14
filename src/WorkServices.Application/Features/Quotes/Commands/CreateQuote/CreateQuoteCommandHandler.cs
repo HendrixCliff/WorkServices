@@ -3,6 +3,7 @@ using WorkServices.Application.Interfaces;
 using WorkServices.Application.Interfaces.Security;
 using WorkServices.Application.Interfaces.Repositories;
 using WorkServices.Domain.Entities;
+using WorkServices.Domain.Enums;
 using WorkServices.Application.Common.Exceptions;
 
 namespace WorkServices.Application.Features.Quotes.Commands.CreateQuote;
@@ -49,12 +50,18 @@ public sealed class CreateQuoteCommandHandler
             "Service request not found");
     
         
-    if (assignment.ArtisanId != _currentUser.UserId)
-    {
-        throw new ForbiddenException(
-            "You are not assigned to this service request.");
-    }
- 
+
+  if (assignment.ArtisanId != _currentUser.UserId)
+{
+    throw new ForbiddenException(
+        "You are not assigned to this service request.");
+}
+
+if (assignment.Status != AssignmentStatus.Accepted)
+{
+    throw new ValidationException(
+        "You must accept the assignment before creating a quote.");
+}
 
    var quote = 
    new Quote(
