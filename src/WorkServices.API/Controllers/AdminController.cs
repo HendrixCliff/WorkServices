@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WorkServices.Application.Features.ServiceRequests.Queries.GetServiceRequestsForAssignment;
+using WorkServices.Application.Features.Admin.Queries.GetArtisansForAssignment;
 
 namespace WorkServices.API.Controllers;
 
@@ -20,10 +21,18 @@ public sealed class AdminController : ControllerBase
     [HttpGet("service-requests")]
     public async Task<IActionResult> GetServiceRequests()
     {
-        var requests =
-            await _mediator.Send(
-                new GetServiceRequestsForAssignmentQuery());
+        var requests = await _mediator.Send(
+            new GetServiceRequestsForAssignmentQuery());
 
         return Ok(requests);
+    }
+
+    [HttpGet("artisans")]
+    public async Task<IActionResult> GetArtisans()
+    {
+        var artisans = await _mediator.Send(
+            new GetArtisansForAssignmentQuery());
+
+        return Ok(artisans);
     }
 }

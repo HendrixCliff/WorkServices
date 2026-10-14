@@ -1,8 +1,9 @@
+
 using MediatR;
+using WorkServices.Application.Common.Exceptions;
 using WorkServices.Application.Interfaces;
 using WorkServices.Application.Interfaces.Repositories;
 using WorkServices.Domain.Entities;
-using WorkServices.Application.Common.Exceptions;
 
 namespace WorkServices.Application.Features.JobAssignments.Commands.AssignJob;
 
@@ -10,11 +11,8 @@ public sealed class AssignJobCommandHandler
     : IRequestHandler<AssignJobCommand, Unit>
 {
     private readonly IServiceRequestRepository _serviceRequestRepository;
-
     private readonly IArtisanRepository _artisanRepository;
-
     private readonly IJobAssignmentRepository _assignmentRepository;
-
     private readonly IUnitOfWork _unitOfWork;
 
     public AssignJobCommandHandler(
@@ -30,34 +28,37 @@ public sealed class AssignJobCommandHandler
     }
 
     public async Task<Unit> Handle(
-    AssignJobCommand request,
-    CancellationToken cancellationToken)
-{
-    var serviceRequest =
-        await _serviceRequestRepository.GetByIdAsync(
-            request.ServiceRequestId)
-        ?? throw new NotFoundException(
-            "Service request not found");
+        AssignJobCommand request,
+        CancellationToken cancellationToken)
+    {
+        var serviceRequest =
+            await _serviceRequestRepository.GetByIdAsync(
+                request.ServiceRequestId)
+            ?? throw new NotFoundException(
+                "Service request not found.");
 
-    var artisan =
-        await _artisanRepository.GetByIdAsync(
-            request.ArtisanId)
-        ?? throw new NotFoundException(
-            "Artisan not found");
+        var availableArtisans =
+            await _artisanRepository.GetAvailableAsync();
 
-    var assignment =
-        new JobAssignment(
+        var artisan = availableArtisans.FirstOrDefault(
+            x => x.Id == request.ArtisanId)
+            ?? throw new NotFoundException(
+                "Artisan not found or is no longer available.");
+
+        var assignment = new JobAssignment(
             serviceRequest.Id,
             artisan.Id);
 
-    serviceRequest.Assign(artisan.Id);
+        serviceRequest.Assign(artisan.Id);
 
-    await _assignmentRepository.AddAsync(
-        assignment);
+        artisan.SetAvailability(false);
 
-    await _unitOfWork.SaveChangesAsync(
-        cancellationToken);
+        await _assignmentRepository.AddAsync(assignment);
 
-    return Unit.Value;
-}
+        _artisanRepository.Update(artisan);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Unit.Value;
+    }
 }
