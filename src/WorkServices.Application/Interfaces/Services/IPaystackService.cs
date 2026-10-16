@@ -7,6 +7,6 @@ public interface IPaystackService
         string email,
         string reference);
 
-    Task<bool> VerifyPaymentAsync(
-        string reference);
+    Task<PaystackVerificationResult?> VerifyPaymentAsync(
+    string reference);
 }

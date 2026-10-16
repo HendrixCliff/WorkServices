@@ -12,5 +12,7 @@ public sealed class QuoteDto
 
     public decimal TotalCost { get; init; }
 
+    public string Notes { get; init; } = string.Empty;
+
     public bool Approved { get; init; }
 }

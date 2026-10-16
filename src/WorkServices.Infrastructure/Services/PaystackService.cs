@@ -57,24 +57,39 @@ public sealed class PaystackService : IPaystackService
 
     return result.Data.AuthorizationUrl;
 }
-    public async Task<bool> VerifyPaymentAsync(
+ public async Task<PaystackVerificationResult?> VerifyPaymentAsync(
     string reference)
 {
-    var response =
-        await _httpClient.GetAsync(
-            $"transaction/verify/{reference}");
+    if (string.IsNullOrWhiteSpace(reference))
+    {
+        return null;
+    }
 
-    response.EnsureSuccessStatusCode();
+    var response = await _httpClient.GetAsync(
+        $"transaction/verify/{Uri.EscapeDataString(reference)}");
 
-    var result =
-        await response.Content.ReadFromJsonAsync<VerifyPaymentResponse>();
+    if (!response.IsSuccessStatusCode)
+    {
+        return null;
+    }
 
-    if (result is null)
-        return false;
+    var result = await response.Content
+        .ReadFromJsonAsync<VerifyPaymentResponse>();
 
-    return result.Status &&
-           result.Data.Status.Equals(
-               "success",
-               StringComparison.OrdinalIgnoreCase);
+    if (result?.Status != true || result.Data is null)
+    {
+        return null;
+    }
+
+    var transaction = result.Data;
+
+    return new PaystackVerificationResult(
+        IsSuccessful: string.Equals(
+            transaction.Status,
+            "success",
+            StringComparison.OrdinalIgnoreCase),
+        Reference: transaction.Reference,
+        AmountMinorUnits: transaction.Amount,
+        Currency: transaction.Currency);
 }
 }

@@ -118,7 +118,8 @@ public sealed class InitializePaymentCommandHandler
             await _payments.GetPendingByServiceRequestAndTypeAsync(
                 serviceRequest.Id,
                 request.PaymentType);
-
+   
+       
         if (payment is null)
         {
             payment = new Payment(

@@ -32,15 +32,18 @@ public sealed class JobAssignmentRepository
                 x => x.Id == id);
     }
 
-    public async Task<List<JobAssignment>>
-        GetArtisanAssignmentsAsync(
-            Guid artisanId)
-    {
-        return await _db.JobAssignments
-            .Include(x => x.ServiceRequest)
-            .Where(x => x.ArtisanId == artisanId)
-            .ToListAsync();
-    }
+   public async Task<List<JobAssignment>> GetArtisanAssignmentsAsync(
+    Guid artisanId)
+{
+    return await _db.JobAssignments
+        .AsNoTracking()
+        .Include(x => x.ServiceRequest)
+            .ThenInclude(x => x.Customer)
+        .Where(x => x.ArtisanId == artisanId)
+        .OrderBy(x => x.ServiceRequest.Status)
+        .ThenByDescending(x => x.AssignedAt)
+        .ToListAsync();
+}
 
     public void Update(
         JobAssignment assignment)
