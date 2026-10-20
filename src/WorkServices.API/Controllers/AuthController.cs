@@ -3,6 +3,8 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WorkServices.Application.Features.Auth.Commands.ForgotPassword;
+using WorkServices.Application.Features.Auth.Commands.ResetPassword;
 using Microsoft.AspNetCore.RateLimiting;
 using WorkServices.Application.Features.Auth.Commands.ConfirmEmail;
 using WorkServices.Application.Features.Auth.Commands.Login;
@@ -80,6 +82,33 @@ public sealed class AuthController : ControllerBase
             message = "Login successful."
         });
     }
+
+    [HttpPost("forgot-password")]
+public async Task<IActionResult> ForgotPassword(
+    ForgotPasswordCommand command,
+    CancellationToken cancellationToken)
+{
+    await _mediator.Send(command, cancellationToken);
+
+    return Ok(new
+    {
+        message =
+            "If an account exists for that email, password reset instructions will be sent."
+    });
+}
+
+[HttpPost("reset-password")]
+public async Task<IActionResult> ResetPassword(
+    ResetPasswordCommand command,
+    CancellationToken cancellationToken)
+{
+    await _mediator.Send(command, cancellationToken);
+
+    return Ok(new
+    {
+        message = "Your password has been reset successfully."
+    });
+}
 
     [Authorize]
     [HttpGet("me")]

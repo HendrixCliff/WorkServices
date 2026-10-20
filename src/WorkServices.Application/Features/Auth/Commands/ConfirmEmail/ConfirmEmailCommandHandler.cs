@@ -30,12 +30,8 @@ public sealed class ConfirmEmailCommandHandler
         if (user.EmailConfirmationTokenExpiry < DateTime.UtcNow)
             throw new NotFoundException("Confirmation token expired.");
 
-        Console.WriteLine($"Request Token: {request.Token}");
-
+        
         var hash = TokenHasher.Hash(request.Token);
-
-        Console.WriteLine($"Computed Hash : {hash}");
-        Console.WriteLine($"Database Hash : {user.EmailConfirmationTokenHash}");
 
         if (hash != user.EmailConfirmationTokenHash)
             throw new NotFoundException("Invalid confirmation token.");

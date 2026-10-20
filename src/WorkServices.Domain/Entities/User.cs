@@ -21,6 +21,10 @@ public abstract class User : Entity
 
     public UserRole Role { get; protected set; }
 
+public string? PasswordResetTokenHash { get; private set; }
+
+public DateTime? PasswordResetTokenExpiry { get; private set; }
+
 
     public void SetEmailConfirmationToken(
     string tokenHash,
@@ -53,4 +57,38 @@ public abstract class User : Entity
     PasswordHash = passwordHash;
     Role = role;
 }
+ public void SetPasswordResetToken(string tokenHash, DateTime expiry)
+{
+    if (string.IsNullOrWhiteSpace(tokenHash))
+    {
+        throw new ArgumentException(
+            "Token hash is required.",
+            nameof(tokenHash));
+    }
+
+    if (expiry <= DateTime.UtcNow)
+    {
+        throw new ArgumentException(
+            "Token expiry must be in the future.",
+            nameof(expiry));
+    }
+
+    PasswordResetTokenHash = tokenHash;
+    PasswordResetTokenExpiry = expiry;
 }
+
+public void ResetPassword(string passwordHash)
+{
+    if (string.IsNullOrWhiteSpace(passwordHash))
+    {
+        throw new ArgumentException(
+            "Password hash is required.",
+            nameof(passwordHash));
+    }
+
+    PasswordHash = passwordHash;
+    PasswordResetTokenHash = null;
+    PasswordResetTokenExpiry = null;
+}
+}
+
